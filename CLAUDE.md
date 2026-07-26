@@ -31,6 +31,12 @@ These came from the owner directly. Do not "improve" them away.
    each be created, renamed, edited, duplicated, deleted and saved.
 5. **Timer transport states:** idle, running, paused, overrun, ended. Controls
    are start, pause, resume, reset, end.
+6. **Advancing is always a human action.** `Next` moves to the next timer; no
+   timer ever advances itself. On the *last* timer of a meeting `Next` reads
+   **Finish** and opens the meeting summary — ending a meeting on an explicit
+   press is not truncation, and the run view must never be a dead end.
+7. **Paused time is never counted as elapsed time.** A timer's actual duration
+   excludes any time it sat paused; pause is tallied in its own field.
 
 ## Data model
 
@@ -142,13 +148,22 @@ short on time.
   inline prose.
 - Commit at every working checkpoint.
 
+## Views
+
+- **Run** — the shared-display screen. The hero.
+- **Manage** (`S`) — meetings, timer library, history, display settings.
+- **Summary** — shown when `Finish` ends a meeting. Target / planned / actual /
+  drift / paused tiles, then a per-session breakdown with buffer used-vs-left
+  and per-timer variance. Exits to Manage → Meetings, or re-runs the meeting.
+
 ## Build status
 
 - [x] Phase 1 — single timer engine, three alerts, overrun, state colours
-- [ ] Build 1 — timer library, sessions with buffers, meetings, persistence,
+- [x] Build 1 — timer library, sessions with buffers, meetings, persistence,
       history and drift roll-up, full CRUD, per-run **paused-time** tracking
       rolled up to meeting level, and the time-remaining graphic behind a
-      **swappable renderer** (ship the depletion bar)
+      **swappable renderer** (depletion bar + draining ring)
+- [x] Build 1a — end-of-meeting summary screen; recording fixes
 - [ ] Build 2 — PWA/offline, JSON export/import, CSV history, empty states
 - [ ] Build 3 — GitHub Pages publish, then office server mirror
 - [ ] Later — richer end-of-timer graphics as alternate renderers
@@ -160,3 +175,8 @@ short on time.
   separate bucket from drift (a pause isn't attributable to a member/activity).
 - 2026-07-26 — Time-remaining graphic to be built as a swappable renderer so
   more engaging graphics can replace the depletion bar later.
+- 2026-07-26 — `Next` on the final timer reads **Finish** and opens a meeting
+  summary, which exits to Manage. Previously the run view dead-ended.
+- 2026-07-26 — Fixed: recorded durations were roughly doubled, because the
+  clock segment was closed and then counted again while the state was still
+  `running`. Durations are now settled to a non-running state before recording.

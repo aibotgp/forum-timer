@@ -102,6 +102,23 @@
   #manageView { display: none; max-width: 960px; margin: 0 auto; padding: clamp(16px,3vw,40px); }
   body.managing #runView { display: none; }
   body.managing #manageView { display: block; }
+
+  /* ===================== SUMMARY VIEW ===================== */
+  #summaryView { display: none; max-width: 960px; margin: 0 auto; padding: clamp(16px,3vw,40px); }
+  body.summarizing { overflow: auto; }
+  body.summarizing #runView, body.summarizing #manageView { display: none; }
+  body.summarizing #summaryView { display: block; }
+  .done-head { text-align: center; margin-bottom: 26px; }
+  .done-head .kicker { color: var(--accent); font-weight: 800; text-transform: uppercase;
+                       letter-spacing: 2.5px; font-size: 14px; }
+  .done-head h1 { margin: 8px 0 4px; font-size: clamp(28px,5vw,44px); }
+  .done-head .sub { color: var(--muted); font-size: 15px; }
+  .done-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 24px 0 30px; }
+  .sess-block { margin-bottom: 10px; }
+  .sess-block .sess-top { display: flex; align-items: baseline; justify-content: space-between;
+                          gap: 12px; flex-wrap: wrap; }
+  .sess-block .sess-nm { font-weight: 700; font-size: 17px; }
+  .sess-block .sess-meta { color: var(--muted); font-size: 13px; }
   .m-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; }
   .m-head h1 { margin: 0; font-size: 26px; }
   .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); margin-bottom: 22px; flex-wrap: wrap; }
@@ -223,6 +240,9 @@
     <div class="panel-sec" id="sec-history"></div>
     <div class="panel-sec" id="sec-display"></div>
   </div>
+
+  <!-- ===================== SUMMARY VIEW ===================== -->
+  <div id="summaryView"></div>
 
   <!-- ===================== MODAL HOST ===================== -->
   <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
@@ -355,6 +375,7 @@ const run = {
   preWarnFired: false, timeUpFired: false, overrunBeeps: 0,
   sessionUsed: {},    // sessionId -> overrun ms consumed by COMPLETED timers this run
   recorded: false,
+  records: [],        // run records produced by THIS pass through the meeting
 };
 
 function buildSteps(m) {
@@ -364,7 +385,7 @@ function buildSteps(m) {
 function loadMeetingIntoRun(m, goRun) {
   store.settings.activeMeetingId = m ? m.id : null; save();
   buildSteps(m);
-  run.index = 0; run.sessionUsed = {};
+  run.index = 0; run.sessionUsed = {}; run.records = [];
   resetTimer();
   if (goRun) showRun();
   renderRun();
@@ -412,6 +433,7 @@ function recordRun() {
     sessionId: s.id, sessionTitle: s.title, timerId: t.id, timerLabel: t.label,
     plannedMs: t.durationMs, actualMs: actual, varianceMs: variance, pausedMs: run.pausedAccumMs };
   store.history.push(rec);
+  run.records.push(rec);
   // roll paused time up to the meeting
   const m = activeMeeting(); if (m) m.pausedTotalMs = (m.pausedTotalMs||0) + run.pausedAccumMs;
   // draw down this session's buffer with any positive overrun
@@ -419,20 +441,32 @@ function recordRun() {
   run.recorded = true; save();
 }
 
+// Close the open segment and leave the clock in a stable, non-running state.
+// This must happen BEFORE recordRun(), otherwise elapsedMs() adds the current
+// segment a second time and every recorded duration is inflated.
+function settle() {
+  if (run.state === "running") {
+    run.elapsedBeforePause += Date.now() - run.startEpoch;
+  } else if (run.state === "paused") {
+    run.pausedAccumMs += Date.now() - run.pauseStartEpoch;
+  }
+  run.state = "settled";                    // neither running nor paused
+}
+
 function endTimer() {                       // hold on the ended timer (no advance)
   if (run.state === "idle") return;
-  if (run.state === "running") run.elapsedBeforePause += Date.now() - run.startEpoch;
-  else if (run.state === "paused") run.pausedAccumMs += Date.now() - run.pauseStartEpoch;
-  recordRun(); run.state = "ended"; renderRun();
+  settle(); recordRun(); run.state = "ended"; renderRun();
 }
+
+function isLastStep() { return run.index >= run.steps.length - 1; }
+
 function nextTimer() {                       // record current, advance to next step
   if (!curStep()) return;
-  if (run.state === "running") run.elapsedBeforePause += Date.now() - run.startEpoch;
-  else if (run.state === "paused") run.pausedAccumMs += Date.now() - run.pauseStartEpoch;
-  if (run.state !== "idle") recordRun();
-  if (run.index < run.steps.length - 1) { run.index++; resetTimer(); }
-  else { run.state = "ended"; }             // end of meeting: hold
-  renderRun();
+  const wasIdle = (run.state === "idle");
+  settle();
+  if (!wasIdle) recordRun();
+  if (!isLastStep()) { run.index++; resetTimer(); renderRun(); }
+  else { run.state = "ended"; showSummary(); }   // meeting finished → summary
 }
 
 // alerts (only while actively running)
@@ -492,7 +526,7 @@ function mountRenderer() {
 function phaseFor(remaining) {
   const t = curTimer();
   if (!t || run.state === "idle") return "idle";
-  if (run.state === "ended") return "ended";
+  if (run.state === "ended" || run.state === "settled") return "ended";
   if (remaining <= 0) return "overrun";
   if (remaining <= t.preWarn.n*1000) return "prewarn";
   return "running";
@@ -571,6 +605,8 @@ function renderRun() {
     '<span class="key">Space</span>';
   $("btnReset").disabled = (run.state === "idle");
   $("btnEnd").disabled = (run.state === "idle" || run.state === "ended");
+  // On the final timer, Next finishes the meeting and opens the summary.
+  $("btnNext").innerHTML = (isLastStep() ? "Finish ▸" : "Next") + '<span class="key">N</span>';
 }
 
 function esc(s) { return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
@@ -585,8 +621,106 @@ function loop() {
 // ==========================================================================
 //  VIEW SWITCHING
 // ==========================================================================
-function showRun() { document.body.classList.remove("managing"); renderRun(); }
-function showManage() { document.body.classList.add("managing"); renderManage(); }
+function showRun() {
+  document.body.classList.remove("managing", "summarizing");
+  renderRun();
+}
+function showManage(tab) {
+  if (typeof tab === "string" && tab) activeTab = tab;   // guard: may be called as an event handler
+  document.body.classList.remove("summarizing");
+  document.body.classList.add("managing");
+  renderManage();
+}
+function showSummary() {
+  document.body.classList.remove("managing");
+  document.body.classList.add("summarizing");
+  renderSummary();
+  window.scrollTo(0, 0);
+}
+
+// ==========================================================================
+//  MEETING SUMMARY (shown when the last timer is finished with Next)
+// ==========================================================================
+function renderSummary() {
+  const m = activeMeeting();
+  const recs = run.records;
+  const plannedRun = recs.reduce((a,r)=>a+r.plannedMs, 0);
+  const actualRun  = recs.reduce((a,r)=>a+r.actualMs, 0);
+  const pausedRun  = recs.reduce((a,r)=>a+r.pausedMs, 0);
+  const driftRun   = actualRun - plannedRun;
+  const plannedAll = m ? m.sessions.reduce((a,s)=>a+s.plannedMs, 0) : 0;
+  const ranCount   = recs.length;
+  const stepCount  = run.steps.length;
+
+  let h = '<div class="done-head"><div class="kicker">Meeting complete</div>' +
+    '<h1>' + esc(m ? m.title : "Meeting") + '</h1>' +
+    '<div class="sub">' + ranCount + ' of ' + stepCount + ' timers run' +
+    (ranCount < stepCount ? ' · ' + (stepCount - ranCount) + ' skipped' : '') + '</div></div>';
+
+  h += '<div class="done-actions">' +
+    '<button class="btn primary" data-act="doneToMeetings">◂ Back to meetings</button>' +
+    '<button class="btn" data-act="doneRunAgain">Run again</button>' +
+    '<button class="btn ghost" data-act="doneToHistory">View full history</button>' +
+    '</div>';
+
+  h += '<div class="stat-tiles">' +
+    tile("Target", m ? fmt(m.targetTotalMs) : "—") +
+    tile("Planned", fmt(plannedAll)) +
+    tile("Actual", fmt(actualRun)) +
+    tile("Drift", fmtSigned(driftRun)) +
+    tile("Paused", fmt(pausedRun)) + '</div>';
+
+  if (!recs.length) {
+    h += '<div class="card"><div class="sub">No timers were run, so there is nothing to report.</div></div>';
+    $("summaryView").innerHTML = h;
+    return;
+  }
+
+  // group this run's records by session, preserving meeting order
+  const bySession = {};
+  recs.forEach(r => { (bySession[r.sessionId] = bySession[r.sessionId] || []).push(r); });
+  const order = m ? m.sessions.filter(s => bySession[s.id]) : [];
+
+  order.forEach(s => {
+    const rows = bySession[s.id];
+    const act = rows.reduce((a,r)=>a+r.actualMs, 0);
+    const pln = rows.reduce((a,r)=>a+r.plannedMs, 0);
+    const pau = rows.reduce((a,r)=>a+r.pausedMs, 0);
+    const drift = act - pln;
+    const pool = (s.bufferBeforeMs||0) + (s.bufferAfterMs||0);
+    const used = rows.reduce((a,r)=>a+Math.max(0, r.varianceMs), 0);
+    const left = pool - used;
+
+    h += '<div class="card sess-block"><div class="sess-top">' +
+      '<div><div class="sess-nm">' + esc(s.title) + '</div>' +
+      '<div class="sess-meta">planned ' + fmt(pln) + ' · actual ' + fmt(act) +
+      ' · paused ' + fmt(pau) + '</div></div>' +
+      '<div class="chips">' +
+        '<span class="chip">drift ' + fmtSigned(drift) + '</span>' +
+        '<span class="chip">buffer ' + fmt(pool) + '</span>' +
+        '<span class="chip">' + (left >= 0 ? fmt(left) + ' left' : fmtSigned(left) + ' over') + '</span>' +
+      '</div></div>';
+
+    h += '<table class="stats" style="margin-top:10px"><thead><tr><th>Timer</th>' +
+      '<th class="num">Planned</th><th class="num">Actual</th>' +
+      '<th class="num">Variance</th><th class="num">Paused</th></tr></thead><tbody>';
+    rows.forEach(r => {
+      h += '<tr><td>' + esc(r.timerLabel) + '</td>' +
+        '<td class="num">' + fmt(r.plannedMs) + '</td>' +
+        '<td class="num">' + fmt(r.actualMs) + '</td>' +
+        '<td class="num ' + (r.varianceMs>0?'pos':'neg') + '">' + fmtSigned(r.varianceMs) + '</td>' +
+        '<td class="num">' + fmt(r.pausedMs) + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+  });
+
+  h += '<div class="done-actions" style="margin-bottom:8px">' +
+    '<button class="btn primary" data-act="doneToMeetings">◂ Back to meetings</button></div>';
+  h += '<div class="hintbar"><kbd>N</kbd> or <kbd>Esc</kbd> back to meetings · ' +
+       '<kbd>S</kbd> manage</div>';
+
+  $("summaryView").innerHTML = h;
+}
 
 // ==========================================================================
 //  MANAGE VIEW
@@ -946,6 +1080,13 @@ document.addEventListener("click", (e) => {
       store.library.push(c); save(); renderLibrary(); break; }
     case "delLibTimer": { if (confirm("Delete library timer?")) { store.library = store.library.filter(x=>x.id!==id); save(); renderLibrary(); } break; }
 
+    // --- meeting summary ---
+    case "doneToMeetings": showManage("meetings"); break;
+    case "doneToHistory": showManage("history"); break;
+    case "doneRunAgain": {
+      run.index = 0; run.sessionUsed = {}; run.records = [];
+      resetTimer(); showRun(); break; }
+
     // --- history ---
     case "clearHistory": { if (confirm("Clear all run history and reset paused totals?")) {
       store.history = []; store.meetings.forEach(m=>m.pausedTotalMs=0); save(); renderHistory(); } break; }
@@ -977,6 +1118,11 @@ document.addEventListener("keydown", (e) => {
   if ($("overlay").classList.contains("open")) { if (e.key === "Escape") { e.preventDefault(); closeModal(); } return; }
   const tag = (e.target.tagName||"").toLowerCase();
   if (tag === "input" || tag === "select" || tag === "textarea") return;
+  if (document.body.classList.contains("summarizing")) {
+    if (e.key === "Escape" || e.key === "n" || e.key === "N") { e.preventDefault(); showManage("meetings"); }
+    else if (e.key === "s" || e.key === "S") { e.preventDefault(); showManage(); }
+    return;
+  }
   if (document.body.classList.contains("managing")) { if (e.key === "Escape" || e.key === "s" || e.key === "S") { e.preventDefault(); showRun(); } return; }
   switch (e.key) {
     case " ": case "Spacebar": e.preventDefault(); toggleStartPause(); break;
