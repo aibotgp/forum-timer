@@ -115,13 +115,9 @@ do **not** add a README, .gitignore or licence (the folder already has them) →
 
 ### 5c. Push
 
-Replace `YOUR-USERNAME` on the first line with your GitHub username, then paste
-the whole block:
-
 ```bash
-GHUSER="YOUR-USERNAME"
 cd "$PROJECT"
-git remote add origin "https://github.com/$GHUSER/forum-timer.git"
+git remote add origin "https://github.com/aibotgp/forum-timer.git"
 git branch -M main
 git push -u origin main
 ```
@@ -138,7 +134,7 @@ Branch: `main` → Folder: `/ (root)` → Save.**
 Two minutes later the tool is live at:
 
 ```
-https://YOUR-USERNAME.github.io/forum-timer/
+https://aibotgp.github.io/forum-timer/
 ```
 
 That link is all anyone needs. Their history saves in their own browser.

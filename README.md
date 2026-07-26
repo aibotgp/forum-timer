@@ -5,7 +5,7 @@ software. Human timekeepers hesitate to interrupt a speaker, so meetings run
 long and everyone leaves late. This puts the overrun on a screen everyone can
 see, so nobody has to be the bad guy.
 
-**[Open the timer →](https://YOUR-USERNAME.github.io/forum-timer/)**
+**[Open the timer →](https://aibotgp.github.io/forum-timer/)**
 
 Nothing to install, no account, no sign-in. Open the link and use it.
 
