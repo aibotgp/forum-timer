@@ -2,6 +2,17 @@
 
 Ten minutes, once. Everything below is copy-paste into Terminal on the MacBook.
 
+> **Project location.** This project lives in your iCloud folder, not
+> `~/Projects`. Every command below uses a `PROJECT` shortcut so you never type
+> the long path. Run this once per Terminal window (it sets the shortcut for
+> that window):
+>
+> ```bash
+> PROJECT="$HOME/Library/Mobile Documents/com~apple~CloudDocs/Downloads/AI Project/Forum Timer"
+> ```
+>
+> After that, `cd "$PROJECT"` takes you to the folder from anywhere.
+
 ---
 
 ## 1. Install Claude Code
@@ -18,35 +29,43 @@ Confirm it landed:
 claude --version
 ```
 
-If `claude` isn't found, restart Terminal so the shell picks up the new path,
-then try again. `claude doctor` prints diagnostics if anything looks off.
+**If you get `zsh: command not found: claude`**, the installer put `claude` in
+`~/.local/bin`, which isn't on your PATH yet. Add it once:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
+```
+
+Then `claude --version` should print the version. `claude doctor` prints
+diagnostics if anything still looks off.
 
 ---
 
-## 2. Create the project
+## 2. The project folder  ✅ already done
+
+The folder is created, git is initialised on `main`, and Phase 1 is committed.
+For reference, this is what set it up (you do **not** need to run it again):
 
 ```bash
-mkdir -p ~/Projects/forum-timer
-cd ~/Projects/forum-timer
+cd "$PROJECT"
 git init
 ```
 
-Now drop two files into `~/Projects/forum-timer`:
+The folder already contains `CLAUDE.md`, `SETUP.md`, and `index.html` (the
+Phase 1 timer), all committed under `Phase 1: timer engine`.
 
-- `CLAUDE.md` — the context file (downloaded separately)
-- `index.html` — rename the Phase 1 timer file to this
-
-```bash
-git add -A
-git commit -m "Phase 1: timer engine"
-```
+> **iCloud note.** Because the folder syncs through iCloud Drive, make sure it
+> stays fully downloaded: System Settings → Apple ID → iCloud → Optimise Mac
+> Storage **off** for this to be safe offline, or right-click the folder in
+> Finder → **Keep Downloaded**. A file that iCloud has offloaded can confuse
+> git and the local web server.
 
 ---
 
-## 3. Start building
+## 3. Build with Claude Code
 
 ```bash
-cd ~/Projects/forum-timer
+cd "$PROJECT"
 claude
 ```
 
@@ -66,21 +85,24 @@ Useful in-session commands:
 | `/clear` | Wipe context between unrelated tasks — do this often |
 | `/compact` | Summarise a long session instead of losing it |
 | `Esc` | Interrupt mid-response and redirect |
-| `#` | Prepend a message to append that instruction to `CLAUDE.md` |
+| `#` | Prepend a message with `#` to append that instruction to `CLAUDE.md` |
 
 ---
 
 ## 4. Test as you go
 
-Claude Code can serve the file so Safari treats it as a real web page, which
-matters because storage and service workers behave differently on `file://`:
+Once persistence lands (Build 1), serve the file so Safari treats it as a real
+web page — `localStorage` and service workers behave differently on `file://`:
 
 ```bash
-cd ~/Projects/forum-timer
+cd "$PROJECT"
 python3 -m http.server 8080
 ```
 
 Open `http://localhost:8080` in Safari. Stop the server with `Ctrl-C`.
+
+For the current Phase 1 file there's no storage yet, so you can just
+double-click `index.html` to open it.
 
 ---
 
@@ -89,7 +111,7 @@ Open `http://localhost:8080` in Safari. Stop the server with `Ctrl-C`.
 Create an empty repo on github.com named `forum-timer`, then:
 
 ```bash
-cd ~/Projects/forum-timer
+cd "$PROJECT"
 git remote add origin https://github.com/YOUR-USERNAME/forum-timer.git
 git branch -M main
 git push -u origin main

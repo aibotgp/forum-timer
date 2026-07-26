@@ -8,6 +8,10 @@ overrun visible to the whole room so nobody has to be the bad guy.
 Primary use is an EO Forum meeting with roughly eight members, but nothing in
 the app is EO-specific. Anyone should be able to open the link and use it.
 
+> **Project location.** Lives in the iCloud folder
+> `~/Library/Mobile Documents/com~apple~CloudDocs/Downloads/AI Project/Forum Timer`,
+> not `~/Projects`. See `SETUP.md`.
+
 ---
 
 ## Non-negotiable behaviour
@@ -37,8 +41,8 @@ Meeting  →  Session  →  Timer
 - A **Timer** has: label, planned duration, three alert configs, run history.
 - A **Session** has: title, its own planned duration, a buffer pool (before
   and after), and an ordered list of timers.
-- A **Meeting** has: title, target total duration, and an ordered list of
-  sessions.
+- A **Meeting** has: title, target total duration, an ordered list of
+  sessions, and a total paused-time tally.
 - A separate **timer library** holds reusable timer definitions that can be
   dropped into any session. Timers can also be built inline.
 
@@ -60,9 +64,16 @@ works offline.
 ## History and analysis
 
 Every run records: date, timer label, planned duration, actual duration,
-variance. Drift rolls up and is stored at **all three levels** — timer, session
-and meeting — because the owner wants to see whether delays come from one
-person, one type of session, or the meeting as a whole.
+variance, **and paused time**. Drift rolls up and is stored at **all three
+levels** — timer, session and meeting — because the owner wants to see whether
+delays come from one person, one type of session, or the meeting as a whole.
+
+**Paused time is tracked separately from drift.** Total time spent paused is
+tallied per run and rolled up to the meeting (available at session and timer
+level too). It is kept in its own bucket because a pause — a break, an
+interruption, a side conversation — is *not* attributable to any member or
+activity, and mixing it into drift would distort who or what is actually
+running the meeting long.
 
 Statistics aggregate by **timer label**, not by a member roster. Duplicating a
 saved meeting therefore keeps accumulating history under the same names.
@@ -76,11 +87,22 @@ mediocre projector in a room of unpredictable brightness.
 - Transport controls stay visible at all times. Never hide them behind hover.
 - State is carried by colour across the whole field, not a small badge:
   running (green) → pre-warning (amber) → overrun (red).
-- The signature element is the depletion bar: it drains left-to-right while
-  time remains, then refills from the right in red as overrun accumulates, so
-  encroachment is visible from across the room.
 - Keyboard first: space start/pause, R reset, E end, S setup.
 - Must stay readable and usable from a laptop screen down to a projector.
+
+### Time-remaining visualisation (swappable)
+
+The signature element is the **depletion bar**: it drains left-to-right while
+time remains, then refills from the right in red as overrun accumulates, so
+encroachment is visible from across the room.
+
+The depletion bar is the *default*, but it is not the only possible graphic.
+The time-remaining visual is built as a **swappable renderer** behind a stable
+interface: the engine hands the renderer the current phase and a
+remaining/overrun fraction each frame, and the renderer draws. This keeps the
+door open for richer, more engaging graphics later (a draining ring, a filling
+shape, something playful near the end) without touching the timing engine.
+Ship the depletion bar now; add alternates as separate renderers later.
 
 ## Distribution
 
@@ -124,6 +146,17 @@ short on time.
 
 - [x] Phase 1 — single timer engine, three alerts, overrun, state colours
 - [ ] Build 1 — timer library, sessions with buffers, meetings, persistence,
-      history and drift roll-up, full CRUD
+      history and drift roll-up, full CRUD, per-run **paused-time** tracking
+      rolled up to meeting level, and the time-remaining graphic behind a
+      **swappable renderer** (ship the depletion bar)
 - [ ] Build 2 — PWA/offline, JSON export/import, CSV history, empty states
 - [ ] Build 3 — GitHub Pages publish, then office server mirror
+- [ ] Later — richer end-of-timer graphics as alternate renderers
+
+## Decisions log
+
+- 2026-07-26 — Project folder is the iCloud path above, not `~/Projects`.
+- 2026-07-26 — Added meeting-level total paused-time tracking, kept as a
+  separate bucket from drift (a pause isn't attributable to a member/activity).
+- 2026-07-26 — Time-remaining graphic to be built as a swappable renderer so
+  more engaging graphics can replace the depletion bar later.
