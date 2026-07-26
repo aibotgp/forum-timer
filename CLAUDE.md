@@ -228,7 +228,7 @@ frame detaches them mid-click and destroys keyboard focus — do not merge these
 - [x] Build 5 — desktop installers: Tauri wrapper in `src-tauri/`, built by
       `.github/workflows/desktop.yml` on macOS and Windows runners, unsigned,
       attached to a GitHub Release. Home links to the Releases page.
-- [x] Build 6 — EO Forum template built in (11 sessions), session library with
+- [x] Build 6 — EO Forum template built in (10 distinct sessions), session library with
       copy-on-add, Library split into Timers | Sessions, always-visible reorder
       controls, explicit session drag handles
 - [ ] Build 3b — office server mirror (copy the three app files into whatever
@@ -253,8 +253,10 @@ can be re-added from Home at any time. Conversions applied when it was written:
 
 - The flow's "Warning at X mins" means X minutes **elapsed**, so it is stored as
   a pre-warning of (duration − X). Do not reinterpret this as time remaining.
+- The flow lists eleven session blocks but two are an identical "Break", so the
+  library holds **10 distinct sessions** and the meeting reuses Break.
 - Deep Dive, Learning Session and Impromptu Deep Dive are **alternatives**, one
-  per meeting. All eleven sessions live in the session library; the shipped
+  per meeting. All ten live in the session library; the shipped
   meeting uses Deep Dive and runs 160 min of timers plus a 25 min buffer pool
   against a 180 min target.
 - Timers are the source of truth for a session's length. The flow's stated
@@ -289,6 +291,14 @@ identical to the hosted one.
 - Desktop history is separate from browser history; export/import bridges them.
 - Bump `version` in BOTH `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`
   when releasing, and use a tag that has not been used before.
+
+## Migration
+
+`load()` migrates and then **saves immediately**. Without that the upgrade only
+existed in memory until the user happened to change something. `migrate()` also
+seeds the session library when the key was absent, so people who already had the
+tool open get the same starting point as new users — but an emptied library is
+never re-seeded.
 
 ## Analytics — the rules that make it lawful
 

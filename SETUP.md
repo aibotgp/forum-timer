@@ -183,7 +183,7 @@ Rust toolchain you do not otherwise want.
 
 1. Push whatever you want released (section 6).
 2. On the repository: **Actions → Build desktop apps → Run workflow**.
-3. Leave the version as `v3.2.0` (or bump it if you have already used that tag)
+3. Leave the version as `v3.2.1` (or bump it if you have already used that tag)
    and press **Run workflow**.
 4. It takes roughly 10–15 minutes. Two jobs run side by side, one on a Mac
    runner and one on Windows.

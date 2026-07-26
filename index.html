@@ -343,7 +343,7 @@ input[type=text]:focus,input[type=number]:focus,select:focus{border-color:var(--
    All time is computed from Date.now() deltas, never by counting ticks.
    ========================================================================== */
 
-const APP_VERSION = "3.2.0";
+const APP_VERSION = "3.2.1";
 
 /* Credit line — shown on Home and Data only. The Run screen is projected in
    front of a room and stays free of it. */
@@ -613,7 +613,10 @@ function migrate(s){
   if (!s.settings.layout) s.settings.layout = "centred";
   if (typeof s.settings.analytics !== "boolean") s.settings.analytics = false;  // opt-in only
   s.library  = Array.isArray(s.library)  ? s.library  : [];
-  s.sessionLibrary = Array.isArray(s.sessionLibrary) ? s.sessionLibrary : [];
+  // Upgrading from a schema that had no session library: seed it with the EO
+  // set, so existing users get the same starting point as new ones. Only when
+  // the key was absent — an emptied library stays empty on later loads.
+  s.sessionLibrary = Array.isArray(s.sessionLibrary) ? s.sessionLibrary : buildEOSessions();
   s.sessionLibrary.forEach(x => { x.timers = Array.isArray(x.timers) ? x.timers : [];
     x.bufferBeforeMs = x.bufferBeforeMs||0; x.bufferAfterMs = x.bufferAfterMs||0;
     recomputeSessionPlanned(x); });
@@ -630,8 +633,19 @@ function migrate(s){
   return s;
 }
 function load(){
-  try { const raw = localStorage.getItem(STORE_KEY); if (raw){ store = migrate(JSON.parse(raw)); return; } }
-  catch(e){}
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw){
+      const before = raw.length;
+      store = migrate(JSON.parse(raw));
+      // Persist the upgrade straight away. Without this the migration only
+      // exists in memory until the user happens to change something, so a
+      // half-upgraded store would be re-migrated on every single load.
+      save();
+      if (before !== (localStorage.getItem(STORE_KEY)||"").length) { /* upgraded */ }
+      return;
+    }
+  } catch(e){}
   store = seed(); save();
 }
 const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch(e){} };
