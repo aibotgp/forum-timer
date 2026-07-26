@@ -140,6 +140,10 @@ the same way.
   blob or `data:` URL — so offline requires real files. Registration fails
   silently when they are absent or when opened over `file://`, and the app
   carries on. Icons are inlined as data URIs, so there are still no image files.
+- Hosted as a GitHub **project page** (`user.github.io/forum-timer/`), so every
+  path in the app and the manifest must stay relative — verified working from a
+  subdirectory, including offline and the bare directory URL.
+- `.nojekyll` stops GitHub Pages running the files through Jekyll.
 - **Bump `VERSION` in `sw.js` on every deploy.** The page detects the waiting
   worker and offers a Reload toast. Skip the bump and users keep the old cache.
 - **No backend, no accounts, no sign-in.** History lives in each browser's
@@ -214,7 +218,9 @@ frame detaches them mid-click and destroys keyboard focus — do not merge these
 - [x] Design pass — spec tokens applied, Caprasimo + Figtree embedded, Home
       screen with `H`, build board with drag-and-drop, Alerts editor, charted
       history, light/dark themes, Room mode
-- [ ] Build 3 — GitHub Pages publish, then office server mirror
+- [~] Build 3 — repo prepared for publishing (README, .gitignore, .nojekyll,
+      font licences, subpath hosting verified). Publish steps in `SETUP.md` §5,
+      awaiting the GitHub push. Office server mirror still to do.
 - [ ] Later — richer end-of-timer graphics as alternate renderers; the Quiet
       stage and Agenda split run layouts (a `layout` setting already exists)
 
@@ -244,5 +250,10 @@ frame detaches them mid-click and destroys keyboard focus — do not merge these
 - 2026-07-26 — Meeting drift counts completed timers plus the live timer's
   *overrun only*. Time the running timer has not used yet is not credit earned,
   so drift no longer reads as a large negative at the start of a meeting.
+- 2026-07-26 — Repo is **public** on GitHub, since Pages is free only on public
+  repos and the app holds no secrets — every user's history stays in their own
+  browser. `Design/` stays tracked.
+- 2026-07-26 — Embedded fonts are SIL OFL, which requires the notice to travel
+  with them: `FONT-LICENSES.txt` must not be deleted or excluded from the repo.
 - 2026-07-26 — Import offers **Merge** (keeps existing, re-ids collisions,
   dedupes history by row id) or **Replace all**. Merge is the safer default.
