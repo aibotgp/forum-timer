@@ -5,681 +5,995 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Forum Timer</title>
 <style>
-  /* ---- Theme / state colours (carried across the whole field) ---- */
   :root {
     --bg: #14161a;
     --fg: #f2f4f7;
     --muted: #8a93a2;
-    --bar-track: rgba(255,255,255,0.08);
-    --accent: #3ecf7a;          /* running (green)   */
-    --accent-warn: #f4b740;     /* pre-warning (amber) */
-    --accent-over: #ff4d4d;     /* overrun (red)     */
+    --line: rgba(255,255,255,0.12);
+    --track: rgba(255,255,255,0.08);
+    --accent: #3ecf7a;         /* running (green)     */
+    --accent-warn: #f4b740;    /* pre-warning (amber) */
+    --accent-over: #ff4d4d;    /* overrun (red)       */
     --field: var(--bg);
     --bar: var(--accent);
     --ink: var(--fg);
-    --transition: 240ms ease;
+    --t: 240ms ease;
   }
-
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
-
   body {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
                  "Helvetica Neue", Arial, sans-serif;
     background: var(--field);
     color: var(--ink);
-    transition: background-color var(--transition), color var(--transition);
-    overflow: hidden;
+    transition: background-color var(--t), color var(--t);
     -webkit-font-smoothing: antialiased;
-  }
-
-  /* whole-field colour by state */
-  body[data-phase="idle"]    { --field: #14161a; --bar: var(--muted); --ink: #f2f4f7; }
-  body[data-phase="running"] { --field: #0e1a12; --bar: var(--accent); --ink: #eafff1; }
-  body[data-phase="prewarn"] { --field: #201a0a; --bar: var(--accent-warn); --ink: #fff6e2; }
-  body[data-phase="overrun"] { --field: #240d0d; --bar: var(--accent-over); --ink: #ffe9e9; }
-  body[data-phase="ended"]   { --field: #16181c; --bar: var(--muted); --ink: #c7cdd6; }
-  body[data-paused="true"]   { --field: #0f1114; --ink: #aab2bf; }
-
-  .stage {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    padding: clamp(16px, 3vw, 40px);
-  }
-
-  header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-  }
-  .label {
-    font-size: clamp(20px, 4vw, 44px);
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    color: var(--ink);
-    opacity: 0.92;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
-  .status {
-    font-size: clamp(13px, 1.6vw, 20px);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--bar);
-    white-space: nowrap;
-  }
+  body[data-phase="idle"]    { --field:#14161a; --bar:var(--muted);       --ink:#f2f4f7; }
+  body[data-phase="running"] { --field:#0e1a12; --bar:var(--accent);      --ink:#eafff1; }
+  body[data-phase="prewarn"] { --field:#201a0a; --bar:var(--accent-warn); --ink:#fff6e2; }
+  body[data-phase="overrun"] { --field:#240d0d; --bar:var(--accent-over); --ink:#ffe9e9; }
+  body[data-phase="ended"]   { --field:#16181c; --bar:var(--muted);       --ink:#c7cdd6; }
+  body[data-paused="true"]   { --field:#0f1114; --ink:#aab2bf; }
+  body.managing { overflow: auto; }
 
-  /* ---- The hero numerals ---- */
-  .clock-wrap {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 0;
-  }
-  .clock {
-    font-variant-numeric: tabular-nums;
-    font-feature-settings: "tnum" 1;
-    font-weight: 800;
-    line-height: 0.9;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-    font-size: min(38vw, 34vh);
-    text-align: center;
-    transition: color var(--transition);
-  }
+  button { font: inherit; cursor: pointer; }
+  :focus-visible { outline: 3px solid #7db4ff; outline-offset: 3px; border-radius: 10px; }
+
+  /* ===================== RUN VIEW ===================== */
+  #runView { height: 100%; display: flex; flex-direction: column; padding: clamp(14px,2.6vw,36px); }
+  .run-top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+  .crumbs { font-size: clamp(13px,1.7vw,20px); color: var(--muted); font-weight: 600;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .crumbs b { color: var(--ink); opacity: 0.9; }
+  .status { font-size: clamp(13px,1.6vw,20px); font-weight: 800; text-transform: uppercase;
+            letter-spacing: 2px; color: var(--bar); white-space: nowrap; }
+
+  .label { font-size: clamp(22px,4.4vw,50px); font-weight: 700; letter-spacing: .5px;
+           text-align: center; margin-top: 6px; color: var(--ink); opacity: .95;
+           overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .clock-wrap { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .clock { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
+           font-weight: 800; line-height: .9; letter-spacing: -.02em; color: var(--ink);
+           font-size: min(30vw, 30vh); text-align: center; transition: color var(--t); }
   .clock .sign { font-weight: 700; }
+  body[data-phase="overrun"] .clock { animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.72;} }
 
-  body[data-phase="overrun"] .clock {
-    animation: pulse 1s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50%      { opacity: 0.72; }
-  }
+  /* renderer mount */
+  #viz { margin: clamp(8px,1.8vh,20px) 0; }
+  .bar-track { height: clamp(20px,3.6vh,50px); background: var(--track); border-radius: 6px;
+               overflow: hidden; position: relative; }
+  .bar-fill { position: absolute; inset: 0; background: var(--bar); transform-origin: right center;
+              transform: scaleX(1); transition: transform 120ms linear, background-color var(--t); }
+  .ring-wrap { display: flex; justify-content: center; }
+  .ring-wrap svg { width: clamp(120px,20vh,220px); height: clamp(120px,20vh,220px); }
+  .ring-bg { fill: none; stroke: var(--track); }
+  .ring-fg { fill: none; stroke: var(--bar); stroke-linecap: round;
+             transition: stroke-dashoffset 120ms linear, stroke var(--t);
+             transform: rotate(-90deg); transform-origin: 50% 50%; }
 
-  /* ---- Depletion bar ---- */
-  .bar-track {
-    height: clamp(22px, 4vh, 54px);
-    background: var(--bar-track);
-    border-radius: 6px;
-    overflow: hidden;
-    margin: clamp(10px, 2vh, 24px) 0;
-    position: relative;
-  }
-  .bar-fill {
-    position: absolute;
-    top: 0; right: 0; bottom: 0;
-    left: 0;
-    background: var(--bar);
-    transform-origin: right center;   /* drains left→right, refills from the right */
-    transform: scaleX(1);
-    transition: transform 120ms linear, background-color var(--transition);
-  }
+  .run-meta { display: flex; justify-content: center; gap: clamp(14px,3vw,40px); flex-wrap: wrap;
+              color: var(--muted); font-size: clamp(12px,1.5vw,17px); margin-bottom: 10px; }
+  .run-meta .m b { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .run-meta .over b { color: var(--accent-over); }
 
-  /* ---- Transport controls (always visible) ---- */
-  .transport {
-    display: flex;
-    gap: clamp(8px, 1.5vw, 16px);
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  button.ctl {
-    font: inherit;
-    font-weight: 650;
-    font-size: clamp(15px, 2vw, 22px);
-    color: var(--fg);
-    background: rgba(255,255,255,0.07);
-    border: 1.5px solid rgba(255,255,255,0.16);
-    border-radius: 12px;
-    padding: clamp(10px, 1.6vh, 18px) clamp(18px, 3vw, 34px);
-    cursor: pointer;
-    transition: background-color 120ms ease, border-color 120ms ease, transform 60ms ease;
-    min-width: clamp(96px, 12vw, 150px);
-  }
-  button.ctl:hover { background: rgba(255,255,255,0.13); }
+  .transport { display: flex; gap: clamp(8px,1.4vw,15px); justify-content: center; flex-wrap: wrap; }
+  button.ctl { font-weight: 650; font-size: clamp(15px,1.9vw,22px); color: var(--fg);
+    background: rgba(255,255,255,.07); border: 1.5px solid rgba(255,255,255,.16); border-radius: 12px;
+    padding: clamp(9px,1.5vh,17px) clamp(16px,2.6vw,30px); min-width: clamp(90px,10vw,140px);
+    transition: background-color 120ms ease, transform 60ms ease; }
+  button.ctl:hover { background: rgba(255,255,255,.13); }
   button.ctl:active { transform: translateY(1px); }
-  button.ctl.primary {
-    background: var(--bar);
-    color: #0b0d10;
-    border-color: transparent;
-  }
-  button.ctl:disabled { opacity: 0.34; cursor: default; }
-  button.ctl .key {
-    font-size: 0.62em;
-    opacity: 0.6;
-    margin-left: 8px;
-    font-weight: 600;
-  }
+  button.ctl.primary { background: var(--bar); color: #0b0d10; border-color: transparent; }
+  button.ctl:disabled { opacity: .34; cursor: default; }
+  button.ctl .key { font-size: .62em; opacity: .6; margin-left: 8px; font-weight: 600; }
 
-  :focus-visible {
-    outline: 3px solid #7db4ff;
-    outline-offset: 3px;
-    border-radius: 12px;
-  }
+  .hintbar { text-align: center; color: var(--muted); font-size: clamp(11px,1.3vw,14px); margin-top: 10px; }
+  .hintbar kbd { background: rgba(255,255,255,.09); border-radius: 5px; padding: 1px 6px; margin: 0 1px; }
 
-  /* ---- Setup overlay ---- */
-  .overlay {
-    position: fixed; inset: 0;
-    background: rgba(6,7,9,0.72);
-    backdrop-filter: blur(6px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    z-index: 10;
-  }
+  .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+           gap: 16px; text-align: center; color: var(--muted); }
+  .empty h1 { color: var(--fg); font-size: clamp(24px,4vw,40px); margin: 0; }
+
+  /* ===================== MANAGE VIEW ===================== */
+  #manageView { display: none; max-width: 960px; margin: 0 auto; padding: clamp(16px,3vw,40px); }
+  body.managing #runView { display: none; }
+  body.managing #manageView { display: block; }
+  .m-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; gap: 12px; }
+  .m-head h1 { margin: 0; font-size: 26px; }
+  .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); margin-bottom: 22px; flex-wrap: wrap; }
+  .tab { background: none; border: none; color: var(--muted); font-weight: 650; font-size: 15px;
+         padding: 10px 14px; border-bottom: 2.5px solid transparent; }
+  .tab.active { color: var(--fg); border-bottom-color: var(--accent); }
+  .panel-sec { display: none; }
+  .panel-sec.active { display: block; }
+
+  .card { background: #1b1e24; border: 1px solid var(--line); border-radius: 14px;
+          padding: 16px 18px; margin-bottom: 12px; }
+  .card .row1 { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .card .ttl { font-weight: 700; font-size: 18px; }
+  .card .sub { color: var(--muted); font-size: 13.5px; margin-top: 3px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 8px;
+          padding: 4px 9px; font-size: 12.5px; color: #cfd5de; }
+  .list-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .mini { background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 9px;
+          color: var(--fg); font-size: 13.5px; font-weight: 600; padding: 7px 11px; }
+  .mini:hover { background: rgba(255,255,255,.13); }
+  .mini.danger:hover { background: #4a1d1d; border-color: #7a2a2a; }
+  .mini.go { background: var(--accent); color: #08120b; border-color: transparent; }
+  .btn { font-weight: 650; font-size: 15px; border-radius: 11px; padding: 10px 18px;
+         border: 1.5px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: var(--fg); }
+  .btn.primary { background: var(--accent); color: #08120b; border-color: transparent; }
+  .btn.ghost { background: none; }
+
+  .nested { margin-top: 12px; padding-left: 12px; border-left: 2px solid var(--line); }
+  .row-item { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+              padding: 9px 0; border-bottom: 1px dashed var(--line); }
+  .row-item:last-child { border-bottom: none; }
+  .row-item .nm { font-weight: 600; }
+  .row-item .meta { color: var(--muted); font-size: 12.5px; }
+  .ord { display: inline-flex; gap: 4px; }
+
+  table.stats { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.stats th, table.stats td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+  table.stats th { color: var(--muted); font-weight: 650; font-size: 12.5px; text-transform: uppercase; letter-spacing: .6px; }
+  table.stats td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.pos { color: var(--accent-over); } td.neg { color: var(--accent); }
+  .stat-tiles { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .tile { background: #1b1e24; border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; min-width: 150px; }
+  .tile .k { color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: .6px; }
+  .tile .v { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 4px; }
+  .radio-row { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .radio-row:last-child { border-bottom: none; }
+
+  /* ===================== MODAL ===================== */
+  .overlay { position: fixed; inset: 0; background: rgba(6,7,9,.72); backdrop-filter: blur(6px);
+             display: none; align-items: center; justify-content: center; padding: 20px; z-index: 20; }
   .overlay.open { display: flex; }
-  .panel {
-    background: #1b1e24;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 18px;
-    padding: clamp(20px, 3vw, 34px);
-    width: min(560px, 100%);
-    max-height: 92vh;
-    overflow-y: auto;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.5);
-  }
-  .panel h2 { margin: 0 0 6px; font-size: 24px; }
-  .panel .hint { margin: 0 0 20px; color: var(--muted); font-size: 14px; }
-  .row {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 6px;
-    margin-bottom: 18px;
-  }
-  .row label { font-size: 14px; font-weight: 600; color: #cfd5de; }
-  .row .sub { font-size: 12.5px; color: var(--muted); }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .grid3 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; }
-  input[type="text"], input[type="number"], select {
-    font: inherit;
-    font-size: 16px;
-    background: #0f1116;
-    color: var(--fg);
-    border: 1.5px solid rgba(255,255,255,0.16);
-    border-radius: 10px;
-    padding: 11px 13px;
-    width: 100%;
-  }
-  fieldset {
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 12px;
-    padding: 14px 16px 4px;
-    margin: 0 0 16px;
-  }
-  fieldset legend { padding: 0 8px; font-weight: 700; font-size: 14px; color: #dfe4ea; }
-  .panel-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 8px; }
-  .btn {
-    font: inherit; font-weight: 650; font-size: 16px;
-    border-radius: 11px; padding: 12px 22px; cursor: pointer;
-    border: 1.5px solid rgba(255,255,255,0.18);
-    background: rgba(255,255,255,0.06); color: var(--fg);
-  }
-  .btn.save { background: var(--accent); color: #08120b; border-color: transparent; }
-
-  .hintbar {
-    text-align: center;
-    color: var(--muted);
-    font-size: clamp(11px, 1.4vw, 14px);
-    margin-top: 12px;
-    letter-spacing: 0.3px;
-  }
-  .hintbar kbd {
-    font-family: inherit;
-    background: rgba(255,255,255,0.09);
-    border-radius: 5px;
-    padding: 1px 6px;
-    margin: 0 1px;
-  }
+  .modal { background: #1b1e24; border: 1px solid var(--line); border-radius: 18px;
+           padding: clamp(18px,2.6vw,30px); width: min(560px,100%); max-height: 92vh; overflow-y: auto;
+           box-shadow: 0 24px 80px rgba(0,0,0,.5); }
+  .modal h2 { margin: 0 0 4px; font-size: 22px; }
+  .modal .hint { margin: 0 0 18px; color: var(--muted); font-size: 13.5px; }
+  .fld { display: grid; gap: 6px; margin-bottom: 15px; }
+  .fld label { font-size: 13.5px; font-weight: 600; color: #cfd5de; }
+  .fld .sub { font-size: 12px; color: var(--muted); }
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  input[type=text], input[type=number], select { font: inherit; font-size: 15.5px; background: #0f1116;
+    color: var(--fg); border: 1.5px solid rgba(255,255,255,.16); border-radius: 10px; padding: 10px 12px; width: 100%; }
+  fieldset { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px 2px; margin: 0 0 14px; }
+  fieldset legend { padding: 0 8px; font-weight: 700; font-size: 13px; color: #dfe4ea; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
 
   @media (prefers-reduced-motion: reduce) {
-    * { transition: none !important; }
+    *, .bar-fill, .ring-fg { transition: none !important; }
     body[data-phase="overrun"] .clock { animation: none; }
-    .bar-fill { transition: none; }
   }
 </style>
 </head>
 <body data-phase="idle" data-paused="false">
-  <div class="stage">
-    <header>
-      <div class="label" id="labelText">Timer</div>
+
+  <!-- ===================== RUN VIEW ===================== -->
+  <div id="runView">
+    <div class="run-top">
+      <div class="crumbs" id="crumbs">—</div>
       <div class="status" id="statusText">Ready</div>
-    </header>
-
-    <div class="clock-wrap">
-      <div class="clock" id="clock">05:00</div>
     </div>
 
-    <div class="bar-track">
-      <div class="bar-fill" id="barFill"></div>
-    </div>
+    <div class="label" id="labelText">Timer</div>
+
+    <div class="clock-wrap"><div class="clock" id="clock">00:00</div></div>
+
+    <div id="viz"></div>
+
+    <div class="run-meta" id="runMeta"></div>
 
     <div class="transport">
       <button class="ctl primary" id="btnStart">Start<span class="key">Space</span></button>
       <button class="ctl" id="btnReset" disabled>Reset<span class="key">R</span></button>
       <button class="ctl" id="btnEnd" disabled>End<span class="key">E</span></button>
-      <button class="ctl" id="btnSetup">Setup<span class="key">S</span></button>
+      <button class="ctl" id="btnNext">Next<span class="key">N</span></button>
+      <button class="ctl" id="btnManage">Manage<span class="key">S</span></button>
     </div>
 
     <div class="hintbar">
-      <kbd>Space</kbd> start / pause &nbsp;·&nbsp;
-      <kbd>R</kbd> reset &nbsp;·&nbsp;
-      <kbd>E</kbd> end &nbsp;·&nbsp;
-      <kbd>S</kbd> setup
+      <kbd>Space</kbd> start/pause · <kbd>R</kbd> reset · <kbd>E</kbd> end ·
+      <kbd>N</kbd> next · <kbd>S</kbd> manage
     </div>
   </div>
 
-  <!-- ---- Setup overlay ---- -->
-  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Timer setup">
-    <div class="panel">
-      <h2>Timer setup</h2>
-      <p class="hint">Configure the timer and its three alerts. Set any sound to <em>None</em> to mute that alert.</p>
-
-      <div class="row">
-        <label for="fLabel">Label</label>
-        <input type="text" id="fLabel" maxlength="60" placeholder="e.g. Member Check-in">
-      </div>
-
-      <div class="row">
-        <label>Planned duration</label>
-        <div class="grid2">
-          <div>
-            <input type="number" id="fMin" min="0" max="600" step="1"> <span class="sub">minutes</span>
-          </div>
-          <div>
-            <input type="number" id="fSec" min="0" max="59" step="1"> <span class="sub">seconds</span>
-          </div>
-        </div>
-      </div>
-
-      <fieldset>
-        <legend>Pre-warning</legend>
-        <div class="grid3">
-          <div class="row" style="margin:0 0 12px;">
-            <label for="fPreN">Fires at … seconds remaining</label>
-            <input type="number" id="fPreN" min="1" max="3600" step="1">
-          </div>
-          <div class="row" style="margin:0 0 12px;">
-            <label for="fPreSound">Sound</label>
-            <select id="fPreSound"></select>
-          </div>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Time up (at zero)</legend>
-        <div class="row" style="margin:0 0 12px;">
-          <label for="fUpSound">Sound</label>
-          <select id="fUpSound"></select>
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Overrun repeat</legend>
-        <div class="grid3">
-          <div class="row" style="margin:0 0 12px;">
-            <label for="fOverN">Repeats every … seconds past zero</label>
-            <input type="number" id="fOverN" min="1" max="3600" step="1">
-          </div>
-          <div class="row" style="margin:0 0 12px;">
-            <label for="fOverSound">Sound</label>
-            <select id="fOverSound"></select>
-          </div>
-        </div>
-      </fieldset>
-
-      <div class="panel-actions">
-        <button class="btn" id="btnCancel">Cancel</button>
-        <button class="btn save" id="btnSave">Save</button>
-      </div>
+  <!-- ===================== MANAGE VIEW ===================== -->
+  <div id="manageView">
+    <div class="m-head">
+      <h1>Manage</h1>
+      <button class="btn primary" id="btnBackToRun">◂ Back to run</button>
     </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="meetings">Meetings</button>
+      <button class="tab" data-tab="library">Timer library</button>
+      <button class="tab" data-tab="history">History</button>
+      <button class="tab" data-tab="display">Display</button>
+    </div>
+    <div class="panel-sec active" id="sec-meetings"></div>
+    <div class="panel-sec" id="sec-library"></div>
+    <div class="panel-sec" id="sec-history"></div>
+    <div class="panel-sec" id="sec-display"></div>
   </div>
+
+  <!-- ===================== MODAL HOST ===================== -->
+  <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 
 <script>
 "use strict";
-
 /* =========================================================================
-   Forum Timer — Phase 1
-   Single timer engine, three alerts, overrun, state colours.
-   Time is computed from Date.now() timestamps (never by counting ticks),
-   so the clock stays accurate even when the tab is throttled.
+   Forum Timer — Build 1
+   Timer library · sessions with buffer pools · meetings · localStorage
+   persistence · history + drift roll-up (timer/session/meeting) ·
+   per-run paused-time rolled up to meeting · full CRUD ·
+   swappable time-remaining renderer.
+   Time is always computed from Date.now() timestamps, never tick-counted.
    ========================================================================= */
 
-// ---- Sound library (synthesised, no audio files) --------------------------
-const SOUNDS = {
-  none:  { name: "None" },
-  soft:  { name: "Soft" },
-  beep:  { name: "Beep" },
-  chime: { name: "Chime" },
-  bell:  { name: "Bell" },
-  alarm: { name: "Alarm" },
-  buzz:  { name: "Buzz" },
-};
+// ---------- utils ----------
+const $ = (id) => document.getElementById(id);
+const uid = () => "id" + Date.now().toString(36) + Math.floor(Math.random()*1e6).toString(36);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
 
+function fmt(ms) {                 // mm:ss (or h:mm:ss beyond an hour)
+  const neg = ms < 0; ms = Math.abs(ms);
+  const total = Math.floor(ms/1000);
+  const h = Math.floor(total/3600), m = Math.floor((total%3600)/60), s = total%60;
+  const core = h > 0
+    ? h + ":" + String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0")
+    : String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+  return (neg ? "-" : "") + core;
+}
+function fmtSigned(ms) { return (ms > 0 ? "+" : ms < 0 ? "−" : "") + fmt(Math.abs(ms)); }
+
+// ---------- sound ----------
+const SOUNDS = { none:"None", soft:"Soft", beep:"Beep", chime:"Chime", bell:"Bell", alarm:"Alarm", buzz:"Buzz" };
 let audioCtx = null;
 function ensureAudio() {
-  if (!audioCtx) {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    audioCtx = new AC();
-  }
+  if (!audioCtx) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; audioCtx = new AC(); }
   if (audioCtx.state === "suspended") audioCtx.resume();
 }
-
-function tone(freq, startOffset, dur, type, peak) {
-  const t0 = audioCtx.currentTime + startOffset;
-  const osc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, t0);
+function tone(freq, off, dur, type, peak) {
+  const t0 = audioCtx.currentTime + off, osc = audioCtx.createOscillator(), g = audioCtx.createGain();
+  osc.type = type; osc.frequency.setValueAtTime(freq, t0);
   g.gain.setValueAtTime(0.0001, t0);
   g.gain.exponentialRampToValueAtTime(peak, t0 + 0.012);
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  osc.connect(g).connect(audioCtx.destination);
-  osc.start(t0);
-  osc.stop(t0 + dur + 0.02);
+  osc.connect(g).connect(audioCtx.destination); osc.start(t0); osc.stop(t0 + dur + 0.02);
 }
-
 function playSound(id) {
-  if (!id || id === "none") return;
-  ensureAudio();
-  if (!audioCtx) return;
+  if (!id || id === "none") return; ensureAudio(); if (!audioCtx) return;
   switch (id) {
-    case "soft":  tone(523.25, 0, 0.45, "sine", 0.28); break;
-    case "beep":  tone(880, 0, 0.16, "square", 0.22); break;
-    case "chime": tone(659.25, 0, 0.28, "sine", 0.3); tone(987.77, 0.16, 0.42, "sine", 0.28); break;
-    case "bell":  tone(784, 0, 0.9, "triangle", 0.32); tone(1568, 0, 0.5, "sine", 0.12); break;
-    case "alarm": tone(1150, 0, 0.12, "square", 0.28); tone(1150, 0.2, 0.12, "square", 0.28); tone(1150, 0.4, 0.12, "square", 0.28); break;
-    case "buzz":  tone(150, 0, 0.55, "sawtooth", 0.24); break;
+    case "soft":  tone(523.25,0,.45,"sine",.28); break;
+    case "beep":  tone(880,0,.16,"square",.22); break;
+    case "chime": tone(659.25,0,.28,"sine",.3); tone(987.77,.16,.42,"sine",.28); break;
+    case "bell":  tone(784,0,.9,"triangle",.32); tone(1568,0,.5,"sine",.12); break;
+    case "alarm": tone(1150,0,.12,"square",.28); tone(1150,.2,.12,"square",.28); tone(1150,.4,.12,"square",.28); break;
+    case "buzz":  tone(150,0,.55,"sawtooth",.24); break;
   }
 }
 
-// ---- Timer configuration & state -----------------------------------------
-const config = {
-  label: "Timer",
-  durationMs: 5 * 60 * 1000,
-  preWarn:  { n: 30, sound: "chime" },  // n = seconds remaining
-  timeUp:   { sound: "bell" },
-  overrun:  { n: 15, sound: "alarm" },  // n = seconds between repeats
+// ---------- persistence ----------
+const STORE_KEY = "forumTimer.v1";
+let store = null;
+
+function newTimer(label, min, sec) {
+  return { id: uid(), label: label || "Timer", durationMs: ((min||0)*60 + (sec||0))*1000,
+           preWarn: { n: 30, sound: "chime" }, timeUp: { sound: "bell" }, overrun: { n: 15, sound: "alarm" } };
+}
+function cloneTimer(t) {
+  return { id: uid(), label: t.label, durationMs: t.durationMs,
+           preWarn: { ...t.preWarn }, timeUp: { ...t.timeUp }, overrun: { ...t.overrun } };
+}
+function newSession(title) {
+  return { id: uid(), title: title || "Session", plannedMs: 0, bufferBeforeMs: 0, bufferAfterMs: 0, timers: [] };
+}
+function newMeeting(title) {
+  return { id: uid(), title: title || "Meeting", targetTotalMs: 0, pausedTotalMs: 0, sessions: [] };
+}
+
+function seed() {
+  const lib = [
+    newTimer("Check-in", 3, 0),
+    newTimer("Presentation", 10, 0),
+    newTimer("Q&A / Feedback", 12, 0),
+    newTimer("Business Housekeeping", 8, 0),
+  ];
+  const m = newMeeting("EO Forum — Monthly");
+  m.targetTotalMs = 180*60*1000;
+  const s1 = newSession("Opening & Check-ins");
+  s1.bufferAfterMs = 5*60*1000;
+  s1.timers = [cloneTimer(lib[0]), cloneTimer(lib[0]), cloneTimer(lib[0])];
+  s1.timers[0].label = "Check-in — A"; s1.timers[1].label = "Check-in — B"; s1.timers[2].label = "Check-in — C";
+  const s2 = newSession("Member Presentation");
+  s2.bufferBeforeMs = 2*60*1000; s2.bufferAfterMs = 5*60*1000;
+  s2.timers = [cloneTimer(lib[1]), cloneTimer(lib[2])];
+  const s3 = newSession("Business & Close");
+  s3.bufferAfterMs = 3*60*1000;
+  s3.timers = [cloneTimer(lib[3])];
+  m.sessions = [s1, s2, s3];
+  recomputeSessionPlanned(s1); recomputeSessionPlanned(s2); recomputeSessionPlanned(s3);
+  return { version: 1, library: lib, meetings: [m], history: [],
+           settings: { rendererId: "bar", activeMeetingId: m.id } };
+}
+function load() {
+  try { const raw = localStorage.getItem(STORE_KEY); if (raw) { store = JSON.parse(raw); return; } }
+  catch (e) { /* fall through to seed */ }
+  store = seed(); save();
+}
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {} }
+
+function recomputeSessionPlanned(s) { s.plannedMs = s.timers.reduce((a,t)=>a+t.durationMs, 0); }
+
+// lookups
+const findMeeting = (id) => store.meetings.find(m => m.id === id);
+function activeMeeting() {
+  let m = findMeeting(store.settings.activeMeetingId);
+  if (!m) m = store.meetings[0] || null;
+  return m;
+}
+
+// ==========================================================================
+//  RUN ENGINE
+// ==========================================================================
+const run = {
+  steps: [],          // [{session, timer}]
+  index: 0,
+  state: "idle",      // idle | running | paused | ended
+  startEpoch: 0,
+  elapsedBeforePause: 0,
+  pausedAccumMs: 0,   // paused wall-time for the CURRENT timer
+  pauseStartEpoch: 0,
+  preWarnFired: false, timeUpFired: false, overrunBeeps: 0,
+  sessionUsed: {},    // sessionId -> overrun ms consumed by COMPLETED timers this run
+  recorded: false,
 };
 
-const timer = {
-  state: "idle",          // idle | running | paused | ended
-  startEpoch: 0,          // Date.now() at the start of the current run segment
-  elapsedBeforePause: 0,  // ms accumulated before the current segment
-  preWarnFired: false,
-  timeUpFired: false,
-  overrunBeeps: 0,        // how many overrun repeats have already sounded
-};
+function buildSteps(m) {
+  run.steps = [];
+  if (m) m.sessions.forEach(s => s.timers.forEach(t => run.steps.push({ session: s, timer: t })));
+}
+function loadMeetingIntoRun(m, goRun) {
+  store.settings.activeMeetingId = m ? m.id : null; save();
+  buildSteps(m);
+  run.index = 0; run.sessionUsed = {};
+  resetTimer();
+  if (goRun) showRun();
+  renderRun();
+}
+function curStep() { return run.steps[run.index] || null; }
+function curTimer() { const s = curStep(); return s ? s.timer : null; }
+function curSession() { const s = curStep(); return s ? s.session : null; }
 
 function elapsedMs() {
-  if (timer.state === "running") {
-    return timer.elapsedBeforePause + (Date.now() - timer.startEpoch);
+  if (run.state === "running") return run.elapsedBeforePause + (Date.now() - run.startEpoch);
+  return run.elapsedBeforePause;
+}
+
+function resetTimer() {
+  run.state = "idle"; run.elapsedBeforePause = 0; run.pausedAccumMs = 0;
+  run.preWarnFired = false; run.timeUpFired = false; run.overrunBeeps = 0; run.recorded = false;
+}
+
+function startTimer() {
+  ensureAudio();
+  const t = curTimer(); if (!t) return;
+  if (run.state === "running") return;
+  if (run.state === "idle" || run.state === "ended") {
+    run.elapsedBeforePause = 0; run.pausedAccumMs = 0;
+    run.preWarnFired = false; run.timeUpFired = false; run.overrunBeeps = 0; run.recorded = false;
+  } else if (run.state === "paused") {
+    run.pausedAccumMs += Date.now() - run.pauseStartEpoch;   // close the pause window
   }
-  return timer.elapsedBeforePause;
+  run.startEpoch = Date.now(); run.state = "running"; renderRun();
+}
+function pauseTimer() {
+  if (run.state !== "running") return;
+  run.elapsedBeforePause += Date.now() - run.startEpoch;
+  run.pauseStartEpoch = Date.now(); run.state = "paused"; renderRun();
+}
+function toggleStartPause() { if (run.state === "running") pauseTimer(); else startTimer(); }
+
+function recordRun() {
+  const step = curStep(); if (!step || run.recorded) return;
+  const t = step.timer, s = step.session;
+  const actual = elapsedMs();
+  const variance = actual - t.durationMs;
+  const rec = { id: uid(), date: new Date().toISOString(),
+    meetingId: (activeMeeting()||{}).id || null, meetingTitle: (activeMeeting()||{}).title || "(ad-hoc)",
+    sessionId: s.id, sessionTitle: s.title, timerId: t.id, timerLabel: t.label,
+    plannedMs: t.durationMs, actualMs: actual, varianceMs: variance, pausedMs: run.pausedAccumMs };
+  store.history.push(rec);
+  // roll paused time up to the meeting
+  const m = activeMeeting(); if (m) m.pausedTotalMs = (m.pausedTotalMs||0) + run.pausedAccumMs;
+  // draw down this session's buffer with any positive overrun
+  run.sessionUsed[s.id] = (run.sessionUsed[s.id]||0) + Math.max(0, variance);
+  run.recorded = true; save();
 }
 
-// ---- DOM refs -------------------------------------------------------------
-const el = {
-  body: document.body,
-  label: document.getElementById("labelText"),
-  status: document.getElementById("statusText"),
-  clock: document.getElementById("clock"),
-  bar: document.getElementById("barFill"),
-  btnStart: document.getElementById("btnStart"),
-  btnReset: document.getElementById("btnReset"),
-  btnEnd: document.getElementById("btnEnd"),
-  btnSetup: document.getElementById("btnSetup"),
-  overlay: document.getElementById("overlay"),
-};
-
-// ---- Transport ------------------------------------------------------------
-function start() {
-  ensureAudio();                       // unlock audio on this user gesture
-  if (timer.state === "running") return;
-  if (timer.state === "idle" || timer.state === "ended") {
-    timer.elapsedBeforePause = 0;
-    timer.preWarnFired = false;
-    timer.timeUpFired = false;
-    timer.overrunBeeps = 0;
-  }
-  timer.startEpoch = Date.now();
-  timer.state = "running";
-  render();
+function endTimer() {                       // hold on the ended timer (no advance)
+  if (run.state === "idle") return;
+  if (run.state === "running") run.elapsedBeforePause += Date.now() - run.startEpoch;
+  else if (run.state === "paused") run.pausedAccumMs += Date.now() - run.pauseStartEpoch;
+  recordRun(); run.state = "ended"; renderRun();
+}
+function nextTimer() {                       // record current, advance to next step
+  if (!curStep()) return;
+  if (run.state === "running") run.elapsedBeforePause += Date.now() - run.startEpoch;
+  else if (run.state === "paused") run.pausedAccumMs += Date.now() - run.pauseStartEpoch;
+  if (run.state !== "idle") recordRun();
+  if (run.index < run.steps.length - 1) { run.index++; resetTimer(); }
+  else { run.state = "ended"; }             // end of meeting: hold
+  renderRun();
 }
 
-function pause() {
-  if (timer.state !== "running") return;
-  timer.elapsedBeforePause += Date.now() - timer.startEpoch;
-  timer.state = "paused";
-  render();
-}
-
-function toggleStartPause() {
-  if (timer.state === "running") pause();
-  else start();                        // idle, paused, ended → run
-}
-
-function reset() {
-  timer.state = "idle";
-  timer.elapsedBeforePause = 0;
-  timer.preWarnFired = false;
-  timer.timeUpFired = false;
-  timer.overrunBeeps = 0;
-  render();
-}
-
-function end() {
-  if (timer.state === "idle" || timer.state === "ended") return;
-  if (timer.state === "running") {
-    timer.elapsedBeforePause += Date.now() - timer.startEpoch;
-  }
-  timer.state = "ended";
-  render();
-}
-
-// ---- Alert checking (only while actively running) -------------------------
+// alerts (only while actively running)
 function checkAlerts(elapsed) {
-  if (timer.state !== "running") return;
-  const remaining = config.durationMs - elapsed;
-
-  // Pre-warning: at N seconds remaining (fires once)
-  if (!timer.preWarnFired && remaining <= config.preWarn.n * 1000) {
-    timer.preWarnFired = true;
-    playSound(config.preWarn.sound);
-  }
-  // Time up: at zero (fires once)
-  if (!timer.timeUpFired && elapsed >= config.durationMs) {
-    timer.timeUpFired = true;
-    playSound(config.timeUp.sound);
-  }
-  // Overrun repeat: every N seconds past zero
-  if (elapsed > config.durationMs) {
-    const overMs = elapsed - config.durationMs;
-    const due = Math.floor(overMs / (config.overrun.n * 1000));
-    if (due > timer.overrunBeeps) {
-      timer.overrunBeeps = due;
-      playSound(config.overrun.sound);
-    }
+  const t = curTimer(); if (!t || run.state !== "running") return;
+  const remaining = t.durationMs - elapsed;
+  if (!run.preWarnFired && remaining <= t.preWarn.n*1000) { run.preWarnFired = true; playSound(t.preWarn.sound); }
+  if (!run.timeUpFired && elapsed >= t.durationMs) { run.timeUpFired = true; playSound(t.timeUp.sound); }
+  if (elapsed > t.durationMs) {
+    const due = Math.floor((elapsed - t.durationMs) / (t.overrun.n*1000));
+    if (due > run.overrunBeeps) { run.overrunBeeps = due; playSound(t.overrun.sound); }
   }
 }
 
-// ---- Rendering ------------------------------------------------------------
-function fmt(ms) {
-  const total = Math.floor(ms / 1000);
-  const m = Math.floor(total / 60);
-  const s = total % 60;
-  return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+// ==========================================================================
+//  RENDERERS (swappable)
+//  Each: mount(container) builds DOM once; update(container, state) draws.
+//  state = { phase, fraction (0..1 remaining), overrunFraction (0..1) }
+// ==========================================================================
+const Renderers = {
+  bar: {
+    name: "Depletion bar",
+    mount(el) { el.innerHTML = '<div class="bar-track"><div class="bar-fill" id="_barFill"></div></div>'; },
+    update(el, st) {
+      const f = $("_barFill"); if (!f) return;
+      const scale = st.fraction > 0 ? st.fraction : st.overrunFraction;
+      f.style.transform = "scaleX(" + clamp(scale,0,1) + ")";
+    },
+  },
+  ring: {
+    name: "Draining ring",
+    mount(el) {
+      el.innerHTML =
+        '<div class="ring-wrap"><svg viewBox="0 0 100 100">' +
+        '<circle class="ring-bg" cx="50" cy="50" r="42" stroke-width="9"></circle>' +
+        '<circle class="ring-fg" id="_ringFg" cx="50" cy="50" r="42" stroke-width="9" ' +
+        'stroke-dasharray="263.9" stroke-dashoffset="0"></circle></svg></div>';
+    },
+    update(el, st) {
+      const c = $("_ringFg"); if (!c) return;
+      const C = 2 * Math.PI * 42;                 // ≈263.9
+      const frac = st.fraction > 0 ? st.fraction : st.overrunFraction;
+      c.setAttribute("stroke-dashoffset", (C * (1 - clamp(frac,0,1))).toFixed(2));
+    },
+  },
+};
+let activeRenderer = null;
+function mountRenderer() {
+  const id = (store.settings.rendererId in Renderers) ? store.settings.rendererId : "bar";
+  activeRenderer = Renderers[id];
+  activeRenderer.mount($("viz"));
 }
 
+// ==========================================================================
+//  RUN VIEW RENDER
+// ==========================================================================
 function phaseFor(remaining) {
-  if (timer.state === "idle") return "idle";
-  if (timer.state === "ended") return "ended";
+  const t = curTimer();
+  if (!t || run.state === "idle") return "idle";
+  if (run.state === "ended") return "ended";
   if (remaining <= 0) return "overrun";
-  if (remaining <= config.preWarn.n * 1000) return "prewarn";
+  if (remaining <= t.preWarn.n*1000) return "prewarn";
   return "running";
 }
-
 function statusLabel(phase) {
-  if (timer.state === "paused") return "Paused";
-  switch (phase) {
-    case "idle": return "Ready";
-    case "running": return "Running";
-    case "prewarn": return "Wrap up";
-    case "overrun": return "Overrun";
-    case "ended": return "Ended";
-  }
-  return "";
+  if (run.state === "paused") return "Paused";
+  return { idle:"Ready", running:"Running", prewarn:"Wrap up", overrun:"Overrun", ended:"Ended" }[phase] || "";
 }
 
-function render() {
+function renderRun() {
+  const t = curTimer(), s = curSession(), m = activeMeeting();
+
+  if (!t) {   // empty state
+    $("runView").querySelector(".run-top").style.visibility = "hidden";
+    $("labelText").style.display = "none";
+    $("viz").style.display = "none";
+    $("runMeta").innerHTML = "";
+    $("clock").innerHTML = '<div class="empty"><h1>No meeting loaded</h1>' +
+      '<div>Open <b>Manage</b> to build or load a meeting.</div>' +
+      '<button class="btn primary" id="_openMng">Open Manage</button></div>';
+    const b = $("_openMng"); if (b) b.onclick = showManage;
+    $("btnStart").disabled = true; $("btnReset").disabled = true; $("btnEnd").disabled = true; $("btnNext").disabled = true;
+    document.body.dataset.phase = "idle"; document.body.dataset.paused = "false";
+    return;
+  }
+  $("runView").querySelector(".run-top").style.visibility = "visible";
+  $("labelText").style.display = ""; $("viz").style.display = "";
+  $("btnStart").disabled = false; $("btnNext").disabled = false;
+
   const elapsed = elapsedMs();
-  const remaining = config.durationMs - elapsed;
+  const remaining = t.durationMs - elapsed;
   const phase = phaseFor(remaining);
+  document.body.dataset.phase = phase;
+  document.body.dataset.paused = String(run.state === "paused");
 
-  el.body.dataset.phase = phase;
-  el.body.dataset.paused = String(timer.state === "paused");
+  // crumbs + progress
+  const sIdx = m ? m.sessions.indexOf(s) : -1;
+  const tIdxInS = s.timers.indexOf(t);
+  $("crumbs").innerHTML = (m ? "<b>"+esc(m.title)+"</b> · " : "") + esc(s.title) +
+    (sIdx>=0 ? " · Session " + (sIdx+1) + "/" + m.sessions.length : "") +
+    " · Timer " + (tIdxInS+1) + "/" + s.timers.length;
+  $("statusText").textContent = statusLabel(phase);
+  $("labelText").textContent = t.label;
 
-  // Numerals
-  if (remaining >= 0) {
-    el.clock.textContent = fmt(remaining);
-  } else {
-    el.clock.innerHTML = '<span class="sign">+</span>' + fmt(-remaining);
+  // numerals
+  $("clock").innerHTML = remaining >= 0 ? fmt(remaining)
+    : '<span class="sign">+</span>' + fmt(-remaining);
+
+  // renderer
+  activeRenderer.update($("viz"), {
+    phase,
+    fraction: remaining > 0 ? clamp(remaining / t.durationMs, 0, 1) : 0,
+    overrunFraction: remaining <= 0 ? clamp((-remaining) / t.durationMs, 0, 1) : 0,
+  });
+
+  // buffer + paused + drift readouts
+  const liveOver = Math.max(0, -remaining);
+  const pool = (s.bufferBeforeMs||0) + (s.bufferAfterMs||0);
+  const used = (run.sessionUsed[s.id]||0) + liveOver;
+  const bufLeft = pool - used;
+  const pausedLive = run.pausedAccumMs + (run.state === "paused" ? Date.now() - run.pauseStartEpoch : 0);
+  let meta = "";
+  meta += '<div class="m">Buffer ' + (bufLeft >= 0
+      ? '<b>' + fmt(bufLeft) + ' left</b>'
+      : '<span class="over"><b>' + fmtSigned(bufLeft) + ' over</b></span>') + '</div>';
+  meta += '<div class="m">Paused <b>' + fmt(pausedLive) + '</b></div>';
+  if (elapsed !== t.durationMs) {
+    const v = elapsed - t.durationMs;
+    meta += '<div class="m ' + (v>0?'over':'') + '">Variance <b>' + fmtSigned(v) + '</b></div>';
   }
+  $("runMeta").innerHTML = meta;
 
-  // Label + status
-  el.label.textContent = config.label || "Timer";
-  el.status.textContent = statusLabel(phase);
-
-  // Depletion bar (anchored right; drains left→right, then red refills from right)
-  let scale;
-  if (remaining > 0) {
-    scale = Math.max(0, Math.min(1, remaining / config.durationMs));
-  } else {
-    const overFrac = (-remaining) / config.durationMs;
-    scale = Math.max(0, Math.min(1, overFrac));   // red grows from the right
-  }
-  el.bar.style.transform = "scaleX(" + scale + ")";
-
-  // Controls
-  el.btnStart.textContent = "";
-  el.btnStart.append(
-    timer.state === "running" ? "Pause" : (timer.state === "paused" ? "Resume" : "Start")
-  );
-  const key = document.createElement("span");
-  key.className = "key";
-  key.textContent = "Space";
-  el.btnStart.append(key);
-
-  el.btnReset.disabled = (timer.state === "idle");
-  el.btnEnd.disabled = (timer.state === "idle" || timer.state === "ended");
+  // start/pause label
+  $("btnStart").innerHTML =
+    (run.state === "running" ? "Pause" : run.state === "paused" ? "Resume" : "Start") +
+    '<span class="key">Space</span>';
+  $("btnReset").disabled = (run.state === "idle");
+  $("btnEnd").disabled = (run.state === "idle" || run.state === "ended");
 }
 
-// ---- Animation loop (display only; math comes from timestamps) ------------
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+// animation loop (display only; math from timestamps)
 function loop() {
-  if (timer.state === "running") {
-    checkAlerts(elapsedMs());
-    render();
-  }
+  if (run.state === "running") { checkAlerts(elapsedMs()); renderRun(); }
+  else if (run.state === "paused") { renderRun(); }   // keep paused clock ticking
   requestAnimationFrame(loop);
 }
 
-// ---- Setup overlay --------------------------------------------------------
-function fillSoundSelect(sel, chosen) {
-  sel.innerHTML = "";
-  for (const id in SOUNDS) {
-    const opt = document.createElement("option");
-    opt.value = id;
-    opt.textContent = SOUNDS[id].name;
-    if (id === chosen) opt.selected = true;
-    sel.append(opt);
+// ==========================================================================
+//  VIEW SWITCHING
+// ==========================================================================
+function showRun() { document.body.classList.remove("managing"); renderRun(); }
+function showManage() { document.body.classList.add("managing"); renderManage(); }
+
+// ==========================================================================
+//  MANAGE VIEW
+// ==========================================================================
+let activeTab = "meetings";
+function renderManage() {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === activeTab));
+  document.querySelectorAll(".panel-sec").forEach(p => p.classList.toggle("active", p.id === "sec-" + activeTab));
+  if (activeTab === "meetings") renderMeetings();
+  else if (activeTab === "library") renderLibrary();
+  else if (activeTab === "history") renderHistory();
+  else if (activeTab === "display") renderDisplay();
+}
+
+// ---- Meetings tab ----
+function renderMeetings() {
+  const el = $("sec-meetings");
+  let h = '<div style="margin-bottom:14px"><button class="btn primary" data-act="newMeeting">+ New meeting</button></div>';
+  if (!store.meetings.length) h += '<div class="card"><div class="sub">No meetings yet. Create one to begin.</div></div>';
+  store.meetings.forEach(m => {
+    const nTimers = m.sessions.reduce((a,s)=>a+s.timers.length,0);
+    const planned = m.sessions.reduce((a,s)=>a+s.plannedMs,0);
+    const isActive = m.id === (activeMeeting()||{}).id;
+    h += '<div class="card"><div class="row1"><div><div class="ttl">' + esc(m.title) +
+      (isActive?' <span class="chip">loaded</span>':'') + '</div>' +
+      '<div class="sub">Target ' + fmt(m.targetTotalMs) + ' · planned ' + fmt(planned) +
+      ' · ' + m.sessions.length + ' session' + (m.sessions.length===1?'':'s') + ' · ' + nTimers + ' timers' +
+      ' · paused so far ' + fmt(m.pausedTotalMs||0) + '</div></div>' +
+      '<div class="list-actions">' +
+      '<button class="mini go" data-act="loadMeeting" data-id="'+m.id+'">Load ▸</button>' +
+      '<button class="mini" data-act="editMeeting" data-id="'+m.id+'">Edit</button>' +
+      '<button class="mini" data-act="renameMeeting" data-id="'+m.id+'">Rename</button>' +
+      '<button class="mini" data-act="dupMeeting" data-id="'+m.id+'">Duplicate</button>' +
+      '<button class="mini danger" data-act="delMeeting" data-id="'+m.id+'">Delete</button>' +
+      '</div></div></div>';
+  });
+  el.innerHTML = h;
+}
+
+function renderMeetingEditor(m) {
+  const el = $("sec-meetings");
+  let h = '<div style="margin-bottom:14px"><button class="btn ghost" data-act="backMeetings">◂ All meetings</button></div>';
+  h += '<div class="card"><div class="row1"><div><div class="ttl">'+esc(m.title)+'</div>' +
+       '<div class="sub">Target total ' + fmt(m.targetTotalMs) + '</div></div>' +
+       '<div class="list-actions"><button class="mini" data-act="editMeetingProps" data-id="'+m.id+'">Edit title / target</button></div></div>';
+  h += '<div class="nested">';
+  if (!m.sessions.length) h += '<div class="sub">No sessions yet.</div>';
+  m.sessions.forEach((s, i) => {
+    h += '<div class="row-item"><div><div class="nm">'+esc(s.title)+'</div>' +
+      '<div class="meta">' + s.timers.length + ' timers · planned ' + fmt(s.plannedMs) +
+      ' · buffer ' + fmt((s.bufferBeforeMs||0)+(s.bufferAfterMs||0)) + '</div></div>' +
+      '<div class="list-actions"><span class="ord">' +
+        '<button class="mini" data-act="moveSession" data-id="'+s.id+'" data-dir="-1"'+(i===0?' disabled':'')+'>↑</button>' +
+        '<button class="mini" data-act="moveSession" data-id="'+s.id+'" data-dir="1"'+(i===m.sessions.length-1?' disabled':'')+'>↓</button></span>' +
+      '<button class="mini" data-act="editSession" data-id="'+s.id+'">Edit</button>' +
+      '<button class="mini" data-act="dupSession" data-id="'+s.id+'">Dup</button>' +
+      '<button class="mini danger" data-act="delSession" data-id="'+s.id+'">Del</button></div></div>';
+  });
+  h += '<div style="margin-top:12px"><button class="btn" data-act="newSession" data-id="'+m.id+'">+ New session</button></div>';
+  h += '</div></div>';
+  el.innerHTML = h;
+}
+
+function renderSessionEditor(m, s) {
+  const el = $("sec-meetings");
+  let h = '<div style="margin-bottom:14px"><button class="btn ghost" data-act="editMeeting" data-id="'+m.id+'">◂ '+esc(m.title)+'</button></div>';
+  h += '<div class="card"><div class="row1"><div><div class="ttl">'+esc(s.title)+'</div>' +
+    '<div class="sub">Planned ' + fmt(s.plannedMs) + ' · buffer before ' + fmt(s.bufferBeforeMs||0) +
+    ' + after ' + fmt(s.bufferAfterMs||0) + '</div></div>' +
+    '<div class="list-actions"><button class="mini" data-act="editSessionProps" data-id="'+s.id+'">Edit title / buffers</button></div></div>';
+  h += '<div class="nested">';
+  if (!s.timers.length) h += '<div class="sub">No timers yet.</div>';
+  s.timers.forEach((t, i) => {
+    h += '<div class="row-item"><div><div class="nm">'+esc(t.label)+'</div>' +
+      '<div class="meta">' + fmt(t.durationMs) + ' · pre ' + t.preWarn.n + 's/' + SOUNDS[t.preWarn.sound] +
+      ' · up ' + SOUNDS[t.timeUp.sound] + ' · over ' + t.overrun.n + 's/' + SOUNDS[t.overrun.sound] + '</div></div>' +
+      '<div class="list-actions"><span class="ord">' +
+        '<button class="mini" data-act="moveTimer" data-id="'+t.id+'" data-dir="-1"'+(i===0?' disabled':'')+'>↑</button>' +
+        '<button class="mini" data-act="moveTimer" data-id="'+t.id+'" data-dir="1"'+(i===s.timers.length-1?' disabled':'')+'>↓</button></span>' +
+      '<button class="mini" data-act="editTimer" data-id="'+t.id+'">Edit</button>' +
+      '<button class="mini" data-act="dupTimer" data-id="'+t.id+'">Dup</button>' +
+      '<button class="mini" data-act="saveToLib" data-id="'+t.id+'">→ Library</button>' +
+      '<button class="mini danger" data-act="delTimer" data-id="'+t.id+'">Del</button></div></div>';
+  });
+  h += '<div style="margin-top:12px" class="list-actions">' +
+       '<button class="btn" data-act="newTimerInline" data-id="'+s.id+'">+ New timer</button>' +
+       '<button class="btn ghost" data-act="addFromLib" data-id="'+s.id+'">+ From library</button></div>';
+  h += '</div></div>';
+  el.innerHTML = h;
+}
+
+// ---- Library tab ----
+function renderLibrary() {
+  const el = $("sec-library");
+  let h = '<div style="margin-bottom:14px"><button class="btn primary" data-act="newLibTimer">+ New library timer</button></div>';
+  if (!store.library.length) h += '<div class="card"><div class="sub">Library is empty.</div></div>';
+  store.library.forEach(t => {
+    h += '<div class="card"><div class="row1"><div><div class="ttl">'+esc(t.label)+'</div>' +
+      '<div class="sub">' + fmt(t.durationMs) + ' · pre ' + t.preWarn.n + 's/' + SOUNDS[t.preWarn.sound] +
+      ' · up ' + SOUNDS[t.timeUp.sound] + ' · over ' + t.overrun.n + 's/' + SOUNDS[t.overrun.sound] + '</div></div>' +
+      '<div class="list-actions">' +
+      '<button class="mini" data-act="editLibTimer" data-id="'+t.id+'">Edit</button>' +
+      '<button class="mini" data-act="dupLibTimer" data-id="'+t.id+'">Duplicate</button>' +
+      '<button class="mini danger" data-act="delLibTimer" data-id="'+t.id+'">Delete</button>' +
+      '</div></div></div>';
+  });
+  el.innerHTML = h;
+}
+
+// ---- History tab ----
+function renderHistory() {
+  const el = $("sec-history");
+  const hist = store.history;
+  const totalPaused = store.meetings.reduce((a,m)=>a+(m.pausedTotalMs||0),0);
+  const totalVar = hist.reduce((a,r)=>a+r.varianceMs,0);
+
+  let h = '<div class="stat-tiles">' +
+    tile("Runs recorded", hist.length) +
+    tile("Total drift", fmtSigned(totalVar)) +
+    tile("Total paused", fmt(totalPaused)) + '</div>';
+
+  // by timer label
+  h += '<h3>Drift by timer label</h3>' + driftTable(groupBy(hist, r => r.timerLabel));
+  // by session
+  h += '<h3>Drift by session</h3>' + driftTable(groupBy(hist, r => r.sessionTitle));
+  // by meeting (+ paused)
+  h += '<h3>By meeting</h3>';
+  const gm = groupBy(hist, r => r.meetingTitle);
+  h += '<table class="stats"><thead><tr><th>Meeting</th><th class="num">Runs</th>' +
+       '<th class="num">Total drift</th><th class="num">Avg drift</th><th class="num">Paused</th></tr></thead><tbody>';
+  const pausedByMeeting = {}; store.meetings.forEach(m => pausedByMeeting[m.title] = (pausedByMeeting[m.title]||0)+(m.pausedTotalMs||0));
+  Object.keys(gm).forEach(k => {
+    const rows = gm[k], tot = rows.reduce((a,r)=>a+r.varianceMs,0);
+    h += '<tr><td>'+esc(k)+'</td><td class="num">'+rows.length+'</td>' +
+      '<td class="num '+(tot>0?'pos':'neg')+'">'+fmtSigned(tot)+'</td>' +
+      '<td class="num">'+fmtSigned(Math.round(tot/rows.length))+'</td>' +
+      '<td class="num">'+fmt(pausedByMeeting[k]||0)+'</td></tr>';
+  });
+  if (!Object.keys(gm).length) h += '<tr><td colspan="5" class="sub">No runs yet.</td></tr>';
+  h += '</tbody></table>';
+
+  // recent runs
+  h += '<h3>Recent runs</h3><table class="stats"><thead><tr><th>When</th><th>Timer</th>' +
+       '<th class="num">Planned</th><th class="num">Actual</th><th class="num">Variance</th><th class="num">Paused</th></tr></thead><tbody>';
+  hist.slice(-15).reverse().forEach(r => {
+    h += '<tr><td>'+esc(new Date(r.date).toLocaleString())+'</td><td>'+esc(r.timerLabel)+'</td>' +
+      '<td class="num">'+fmt(r.plannedMs)+'</td><td class="num">'+fmt(r.actualMs)+'</td>' +
+      '<td class="num '+(r.varianceMs>0?'pos':'neg')+'">'+fmtSigned(r.varianceMs)+'</td>' +
+      '<td class="num">'+fmt(r.pausedMs)+'</td></tr>';
+  });
+  if (!hist.length) h += '<tr><td colspan="6" class="sub">No runs yet.</td></tr>';
+  h += '</tbody></table>';
+
+  h += '<div style="margin-top:18px"><button class="btn danger" data-act="clearHistory">Clear history</button></div>';
+  el.innerHTML = h;
+}
+function tile(k,v){ return '<div class="tile"><div class="k">'+k+'</div><div class="v">'+v+'</div></div>'; }
+function groupBy(arr, fn){ const o={}; arr.forEach(x=>{ const k=fn(x); (o[k]=o[k]||[]).push(x); }); return o; }
+function driftTable(groups){
+  let h = '<table class="stats"><thead><tr><th>Name</th><th class="num">Runs</th>' +
+    '<th class="num">Total</th><th class="num">Average</th></tr></thead><tbody>';
+  const keys = Object.keys(groups);
+  if (!keys.length) return h + '<tr><td colspan="4" class="sub">No runs yet.</td></tr></tbody></table>';
+  keys.sort((a,b)=>{ const ta=groups[b].reduce((x,r)=>x+r.varianceMs,0), tb=groups[a].reduce((x,r)=>x+r.varianceMs,0); return ta-tb; });
+  keys.forEach(k => {
+    const rows = groups[k], tot = rows.reduce((a,r)=>a+r.varianceMs,0), avg = Math.round(tot/rows.length);
+    h += '<tr><td>'+esc(k)+'</td><td class="num">'+rows.length+'</td>' +
+      '<td class="num '+(tot>0?'pos':'neg')+'">'+fmtSigned(tot)+'</td>' +
+      '<td class="num '+(avg>0?'pos':'neg')+'">'+fmtSigned(avg)+'</td></tr>';
+  });
+  return h + '</tbody></table>';
+}
+
+// ---- Display tab ----
+function renderDisplay() {
+  const el = $("sec-display");
+  let h = '<div class="card"><div class="ttl" style="margin-bottom:6px">Time-remaining graphic</div>' +
+    '<div class="sub" style="margin-bottom:12px">Swappable — more graphics can be added later without touching the timer engine.</div>';
+  Object.keys(Renderers).forEach(id => {
+    const on = (store.settings.rendererId === id);
+    h += '<label class="radio-row"><input type="radio" name="rend" value="'+id+'"'+(on?' checked':'')+'> ' +
+         '<span>'+Renderers[id].name+'</span></label>';
+  });
+  h += '</div>';
+  el.innerHTML = h;
+  el.querySelectorAll('input[name=rend]').forEach(r => r.addEventListener("change", e => {
+    store.settings.rendererId = e.target.value; save(); mountRenderer(); renderRun();
+  }));
+}
+
+// ==========================================================================
+//  EDITORS (modals)
+// ==========================================================================
+function openModal(html) { $("modal").innerHTML = html; $("overlay").classList.add("open"); }
+function closeModal() { $("overlay").classList.remove("open"); }
+function soundOptions(sel){ return Object.keys(SOUNDS).map(id =>
+  '<option value="'+id+'"'+(id===sel?' selected':'')+'>'+SOUNDS[id]+'</option>').join(""); }
+
+function timerModal(title, t, onSave) {
+  const min = Math.floor(t.durationMs/60000), sec = Math.floor((t.durationMs%60000)/1000);
+  openModal(
+    '<h2>'+title+'</h2><p class="hint">Set the timer and its three alerts. Sound <em>None</em> mutes an alert.</p>' +
+    '<div class="fld"><label>Label</label><input type="text" id="e_label" maxlength="60" value="'+esc(t.label)+'"></div>' +
+    '<div class="fld"><label>Planned duration</label><div class="g2">' +
+      '<div><input type="number" id="e_min" min="0" max="600" value="'+min+'"><div class="sub">minutes</div></div>' +
+      '<div><input type="number" id="e_sec" min="0" max="59" value="'+sec+'"><div class="sub">seconds</div></div></div></div>' +
+    '<fieldset><legend>Pre-warning</legend><div class="g2">' +
+      '<div class="fld"><label>Seconds remaining</label><input type="number" id="e_preN" min="1" max="3600" value="'+t.preWarn.n+'"></div>' +
+      '<div class="fld"><label>Sound</label><select id="e_preS">'+soundOptions(t.preWarn.sound)+'</select></div></div></fieldset>' +
+    '<fieldset><legend>Time up (at zero)</legend>' +
+      '<div class="fld"><label>Sound</label><select id="e_upS">'+soundOptions(t.timeUp.sound)+'</select></div></fieldset>' +
+    '<fieldset><legend>Overrun repeat</legend><div class="g2">' +
+      '<div class="fld"><label>Every N seconds</label><input type="number" id="e_ovN" min="1" max="3600" value="'+t.overrun.n+'"></div>' +
+      '<div class="fld"><label>Sound</label><select id="e_ovS">'+soundOptions(t.overrun.sound)+'</select></div></div></fieldset>' +
+    '<div class="modal-actions"><button class="btn ghost" data-act="closeModal">Cancel</button>' +
+      '<button class="btn primary" id="e_save">Save</button></div>'
+  );
+  ["e_preS","e_upS","e_ovS"].forEach(id => $(id).addEventListener("change", e => playSound(e.target.value)));
+  $("e_save").onclick = () => {
+    const mn = clamp(parseInt($("e_min").value,10)||0, 0, 600);
+    const sc = clamp(parseInt($("e_sec").value,10)||0, 0, 59);
+    let dur = (mn*60+sc)*1000; if (dur <= 0) dur = 1000;
+    t.label = $("e_label").value.trim() || "Timer";
+    t.durationMs = dur;
+    t.preWarn.n = clamp(parseInt($("e_preN").value,10)||1, 1, 3600); t.preWarn.sound = $("e_preS").value;
+    t.timeUp.sound = $("e_upS").value;
+    t.overrun.n = clamp(parseInt($("e_ovN").value,10)||1, 1, 3600); t.overrun.sound = $("e_ovS").value;
+    closeModal(); onSave();
+  };
+}
+
+function textDurModal(title, label, cur, onSave) { // for meeting title/target
+  const min = Math.floor(cur.durationMs/60000), sec = Math.floor((cur.durationMs%60000)/1000);
+  openModal('<h2>'+title+'</h2>' +
+    '<div class="fld"><label>'+label+'</label><input type="text" id="e_t" maxlength="80" value="'+esc(cur.text)+'"></div>' +
+    '<div class="fld"><label>Target total duration</label><div class="g2">' +
+    '<div><input type="number" id="e_m" min="0" max="1440" value="'+min+'"><div class="sub">minutes</div></div>' +
+    '<div><input type="number" id="e_s" min="0" max="59" value="'+sec+'"><div class="sub">seconds</div></div></div></div>' +
+    '<div class="modal-actions"><button class="btn ghost" data-act="closeModal">Cancel</button>' +
+    '<button class="btn primary" id="e_ok">Save</button></div>');
+  $("e_ok").onclick = () => {
+    const text = $("e_t").value.trim() || cur.text;
+    const dur = ((clamp(parseInt($("e_m").value,10)||0,0,1440))*60 + (clamp(parseInt($("e_s").value,10)||0,0,59)))*1000;
+    closeModal(); onSave(text, dur);
+  };
+}
+
+function sessionModal(title, s, onSave) {
+  const b = (ms)=>({ mn: Math.floor(ms/60000), sc: Math.floor((ms%60000)/1000) });
+  const bb = b(s.bufferBeforeMs||0), ba = b(s.bufferAfterMs||0);
+  openModal('<h2>'+title+'</h2><p class="hint">Buffers form the session\'s overrun pool. Overrun draws it down before the meeting expands.</p>' +
+    '<div class="fld"><label>Title</label><input type="text" id="s_t" maxlength="80" value="'+esc(s.title)+'"></div>' +
+    '<fieldset><legend>Buffer before</legend><div class="g2">' +
+      '<div><input type="number" id="s_bbm" min="0" max="600" value="'+bb.mn+'"><div class="sub">minutes</div></div>' +
+      '<div><input type="number" id="s_bbs" min="0" max="59" value="'+bb.sc+'"><div class="sub">seconds</div></div></div></fieldset>' +
+    '<fieldset><legend>Buffer after</legend><div class="g2">' +
+      '<div><input type="number" id="s_bam" min="0" max="600" value="'+ba.mn+'"><div class="sub">minutes</div></div>' +
+      '<div><input type="number" id="s_bas" min="0" max="59" value="'+ba.sc+'"><div class="sub">seconds</div></div></div></fieldset>' +
+    '<div class="modal-actions"><button class="btn ghost" data-act="closeModal">Cancel</button>' +
+    '<button class="btn primary" id="s_ok">Save</button></div>');
+  $("s_ok").onclick = () => {
+    s.title = $("s_t").value.trim() || "Session";
+    s.bufferBeforeMs = ((clamp(parseInt($("s_bbm").value,10)||0,0,600))*60 + (clamp(parseInt($("s_bbs").value,10)||0,0,59)))*1000;
+    s.bufferAfterMs  = ((clamp(parseInt($("s_bam").value,10)||0,0,600))*60 + (clamp(parseInt($("s_bas").value,10)||0,0,59)))*1000;
+    closeModal(); onSave();
+  };
+}
+
+function promptName(title, cur, onSave) {
+  openModal('<h2>'+title+'</h2>' +
+    '<div class="fld"><label>Name</label><input type="text" id="p_n" maxlength="80" value="'+esc(cur)+'"></div>' +
+    '<div class="modal-actions"><button class="btn ghost" data-act="closeModal">Cancel</button>' +
+    '<button class="btn primary" id="p_ok">Save</button></div>');
+  $("p_ok").onclick = () => { const v = $("p_n").value.trim(); closeModal(); if (v) onSave(v); };
+}
+function libPickerModal(onPick) {
+  let h = '<h2>Add from library</h2>';
+  if (!store.library.length) h += '<p class="hint">Library is empty. Add timers in the Library tab first.</p>';
+  h += '<div>';
+  store.library.forEach(t => { h += '<div class="row-item"><div><div class="nm">'+esc(t.label)+'</div>' +
+    '<div class="meta">'+fmt(t.durationMs)+'</div></div><button class="mini go" data-pick="'+t.id+'">Add</button></div>'; });
+  h += '</div><div class="modal-actions"><button class="btn ghost" data-act="closeModal">Close</button></div>';
+  openModal(h);
+  $("modal").querySelectorAll("[data-pick]").forEach(b => b.onclick = () => {
+    const t = store.library.find(x => x.id === b.dataset.pick); closeModal(); if (t) onPick(t);
+  });
+}
+
+// helpers to find nested objects
+function findSession(id){ for (const m of store.meetings){ const s = m.sessions.find(x=>x.id===id); if (s) return {m,s}; } return null; }
+function findTimerInMeetings(id){ for (const m of store.meetings) for (const s of m.sessions){ const t = s.timers.find(x=>x.id===id); if (t) return {m,s,t}; } return null; }
+
+// editor navigation state
+let editMeetingId = null, editSessionId = null;
+
+// ==========================================================================
+//  ACTION DISPATCH (event delegation on the whole document)
+// ==========================================================================
+document.addEventListener("click", (e) => {
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  const dir = parseInt(el.dataset.dir,10);
+
+  switch (act) {
+    case "closeModal": closeModal(); break;
+
+    // --- meetings list ---
+    case "newMeeting": {
+      const m = newMeeting("New meeting"); store.meetings.push(m); save();
+      editMeetingId = m.id; renderMeetingEditor(m); break; }
+    case "loadMeeting": { const m = findMeeting(id); loadMeetingIntoRun(m, true); break; }
+    case "renameMeeting": { const m = findMeeting(id); promptName("Rename meeting", m.title, v => { m.title=v; save(); renderMeetings(); }); break; }
+    case "dupMeeting": { const m = findMeeting(id); const c = JSON.parse(JSON.stringify(m));
+      reid(c); c.title = m.title + " (copy)"; c.pausedTotalMs = 0; store.meetings.push(c); save(); renderMeetings(); break; }
+    case "delMeeting": { if (confirm("Delete this meeting? History stays.")) {
+      store.meetings = store.meetings.filter(x=>x.id!==id);
+      if (store.settings.activeMeetingId===id){ const m=activeMeeting(); loadMeetingIntoRun(m,false); }
+      save(); renderMeetings(); } break; }
+    case "editMeeting": { editMeetingId = id; renderMeetingEditor(findMeeting(id)); break; }
+    case "backMeetings": renderMeetings(); break;
+    case "editMeetingProps": { const m = findMeeting(id);
+      textDurModal("Meeting", "Title", {text:m.title, durationMs:m.targetTotalMs}, (text,dur)=>{ m.title=text; m.targetTotalMs=dur; save(); renderMeetingEditor(m); }); break; }
+
+    // --- sessions ---
+    case "newSession": { const m = findMeeting(id); const s = newSession("New session");
+      m.sessions.push(s); save(); renderMeetingEditor(m); break; }
+    case "editSession": { const f = findSession(id); editSessionId = id; renderSessionEditor(f.m, f.s); break; }
+    case "editSessionProps": { const f = findSession(id);
+      sessionModal("Edit session", f.s, ()=>{ save(); renderSessionEditor(f.m, f.s); }); break; }
+    case "dupSession": { const f = findSession(id); const c = JSON.parse(JSON.stringify(f.s)); reidSession(c);
+      c.title = f.s.title + " (copy)"; const i = f.m.sessions.indexOf(f.s); f.m.sessions.splice(i+1,0,c); save(); renderMeetingEditor(f.m); break; }
+    case "delSession": { const f = findSession(id); if (confirm("Delete session?")) {
+      f.m.sessions = f.m.sessions.filter(x=>x.id!==id); save(); renderMeetingEditor(f.m); } break; }
+    case "moveSession": { const f = findSession(id); move(f.m.sessions, f.s, dir); save(); renderMeetingEditor(f.m); break; }
+
+    // --- timers in a session ---
+    case "newTimerInline": { const f = findSession(id); const t = newTimer("New timer",5,0);
+      timerModal("New timer", t, ()=>{ f.s.timers.push(t); recomputeSessionPlanned(f.s); save(); renderSessionEditor(f.m, f.s); }); break; }
+    case "addFromLib": { const f = findSession(id); libPickerModal(def => {
+      f.s.timers.push(cloneTimer(def)); recomputeSessionPlanned(f.s); save(); renderSessionEditor(f.m, f.s); }); break; }
+    case "editTimer": { const f = findTimerInMeetings(id);
+      timerModal("Edit timer", f.t, ()=>{ recomputeSessionPlanned(f.s); save(); renderSessionEditor(f.m, f.s); }); break; }
+    case "dupTimer": { const f = findTimerInMeetings(id); const c = cloneTimer(f.t); c.label = f.t.label + " (copy)";
+      const i = f.s.timers.indexOf(f.t); f.s.timers.splice(i+1,0,c); recomputeSessionPlanned(f.s); save(); renderSessionEditor(f.m, f.s); break; }
+    case "delTimer": { const f = findTimerInMeetings(id); f.s.timers = f.s.timers.filter(x=>x.id!==id);
+      recomputeSessionPlanned(f.s); save(); renderSessionEditor(f.m, f.s); break; }
+    case "moveTimer": { const f = findTimerInMeetings(id); move(f.s.timers, f.t, dir); save(); renderSessionEditor(f.m, f.s); break; }
+    case "saveToLib": { const f = findTimerInMeetings(id); store.library.push(cloneTimer(f.t)); save();
+      flash(el, "Saved"); break; }
+
+    // --- library ---
+    case "newLibTimer": { const t = newTimer("New timer",5,0);
+      timerModal("New library timer", t, ()=>{ store.library.push(t); save(); renderLibrary(); }); break; }
+    case "editLibTimer": { const t = store.library.find(x=>x.id===id);
+      timerModal("Edit library timer", t, ()=>{ save(); renderLibrary(); }); break; }
+    case "dupLibTimer": { const t = store.library.find(x=>x.id===id); const c = cloneTimer(t); c.label = t.label + " (copy)";
+      store.library.push(c); save(); renderLibrary(); break; }
+    case "delLibTimer": { if (confirm("Delete library timer?")) { store.library = store.library.filter(x=>x.id!==id); save(); renderLibrary(); } break; }
+
+    // --- history ---
+    case "clearHistory": { if (confirm("Clear all run history and reset paused totals?")) {
+      store.history = []; store.meetings.forEach(m=>m.pausedTotalMs=0); save(); renderHistory(); } break; }
   }
-}
-
-function openSetup() {
-  const g = (id) => document.getElementById(id);
-  g("fLabel").value = config.label;
-  g("fMin").value = Math.floor(config.durationMs / 60000);
-  g("fSec").value = Math.floor((config.durationMs % 60000) / 1000);
-  g("fPreN").value = config.preWarn.n;
-  g("fOverN").value = config.overrun.n;
-  fillSoundSelect(g("fPreSound"), config.preWarn.sound);
-  fillSoundSelect(g("fUpSound"), config.timeUp.sound);
-  fillSoundSelect(g("fOverSound"), config.overrun.sound);
-  el.overlay.classList.add("open");
-  g("fLabel").focus();
-}
-
-function closeSetup() {
-  el.overlay.classList.remove("open");
-}
-
-function saveSetup() {
-  const g = (id) => document.getElementById(id);
-  const min = Math.max(0, parseInt(g("fMin").value, 10) || 0);
-  const sec = Math.min(59, Math.max(0, parseInt(g("fSec").value, 10) || 0));
-  let durMs = (min * 60 + sec) * 1000;
-  if (durMs <= 0) durMs = 1000;        // never a zero-length timer
-
-  config.label = g("fLabel").value.trim() || "Timer";
-  config.durationMs = durMs;
-  config.preWarn.n = Math.max(1, parseInt(g("fPreN").value, 10) || 1);
-  config.preWarn.sound = g("fPreSound").value;
-  config.timeUp.sound = g("fUpSound").value;
-  config.overrun.n = Math.max(1, parseInt(g("fOverN").value, 10) || 1);
-  config.overrun.sound = g("fOverSound").value;
-
-  closeSetup();
-  reset();                             // apply new config from a clean idle
-}
-
-// Preview a sound when its dropdown changes
-["fPreSound", "fUpSound", "fOverSound"].forEach((id) => {
-  document.getElementById(id).addEventListener("change", (e) => playSound(e.target.value));
 });
 
-// ---- Wiring ---------------------------------------------------------------
-el.btnStart.addEventListener("click", toggleStartPause);
-el.btnReset.addEventListener("click", reset);
-el.btnEnd.addEventListener("click", end);
-el.btnSetup.addEventListener("click", openSetup);
-document.getElementById("btnSave").addEventListener("click", saveSetup);
-document.getElementById("btnCancel").addEventListener("click", closeSetup);
+function move(arr, item, dir) { const i = arr.indexOf(item), j = i + dir;
+  if (i<0 || j<0 || j>=arr.length) return; arr.splice(i,1); arr.splice(j,0,item); }
+function reidSession(s){ s.id = uid(); s.timers.forEach(t=>t.id=uid()); }
+function reid(m){ m.id = uid(); m.sessions.forEach(reidSession); }
+function flash(el, msg){ const o = el.textContent; el.textContent = msg; setTimeout(()=>{ el.textContent = o; }, 900); }
+
+// ==========================================================================
+//  WIRING
+// ==========================================================================
+$("btnStart").addEventListener("click", toggleStartPause);
+$("btnReset").addEventListener("click", resetTimerAndRender);
+$("btnEnd").addEventListener("click", endTimer);
+$("btnNext").addEventListener("click", nextTimer);
+$("btnManage").addEventListener("click", showManage);
+$("btnBackToRun").addEventListener("click", showRun);
+function resetTimerAndRender(){ resetTimer(); renderRun(); }
+
+document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => { activeTab = b.dataset.tab; renderManage(); }));
+
+$("overlay").addEventListener("mousedown", (e) => { if (e.target === $("overlay")) closeModal(); });
 
 document.addEventListener("keydown", (e) => {
-  // When the setup panel is open, let inputs behave normally (Esc closes).
-  if (el.overlay.classList.contains("open")) {
-    if (e.key === "Escape") { e.preventDefault(); closeSetup(); }
-    return;
-  }
-  const tag = (e.target.tagName || "").toLowerCase();
+  if ($("overlay").classList.contains("open")) { if (e.key === "Escape") { e.preventDefault(); closeModal(); } return; }
+  const tag = (e.target.tagName||"").toLowerCase();
   if (tag === "input" || tag === "select" || tag === "textarea") return;
-
+  if (document.body.classList.contains("managing")) { if (e.key === "Escape" || e.key === "s" || e.key === "S") { e.preventDefault(); showRun(); } return; }
   switch (e.key) {
-    case " ":
-    case "Spacebar":
-      e.preventDefault(); toggleStartPause(); break;
-    case "r": case "R":
-      e.preventDefault(); reset(); break;
-    case "e": case "E":
-      e.preventDefault(); end(); break;
-    case "s": case "S":
-      e.preventDefault(); openSetup(); break;
+    case " ": case "Spacebar": e.preventDefault(); toggleStartPause(); break;
+    case "r": case "R": e.preventDefault(); resetTimerAndRender(); break;
+    case "e": case "E": e.preventDefault(); endTimer(); break;
+    case "n": case "N": e.preventDefault(); nextTimer(); break;
+    case "s": case "S": e.preventDefault(); showManage(); break;
   }
 });
 
-// Close overlay by clicking the backdrop
-el.overlay.addEventListener("mousedown", (e) => {
-  if (e.target === el.overlay) closeSetup();
-});
-
-// ---- Go -------------------------------------------------------------------
-render();
+// ==========================================================================
+//  INIT
+// ==========================================================================
+load();
+mountRenderer();
+loadMeetingIntoRun(activeMeeting(), false);
+showRun();
 requestAnimationFrame(loop);
 </script>
 </body>
