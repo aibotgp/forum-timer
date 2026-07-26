@@ -277,6 +277,12 @@ the whole session.
 
 ## Desktop builds
 
+**The release workflow must stay three jobs**: create the draft release, build
+the matrix into that release id, publish. When each matrix job created its own
+release (v3.2.1) the two raced on the same tag, the Mac installer was orphaned,
+and both jobs still reported success. Never give `tauri-action` a `tagName` in a
+matrix build — give it `releaseId`.
+
 `src-tauri/` wraps the same `index.html` in a system webview. There are no
 commands, no plugins and no IPC — the desktop build must stay behaviourally
 identical to the hosted one.

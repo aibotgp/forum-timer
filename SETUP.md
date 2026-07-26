@@ -183,13 +183,20 @@ Rust toolchain you do not otherwise want.
 
 1. Push whatever you want released (section 6).
 2. On the repository: **Actions → Build desktop apps → Run workflow**.
-3. Leave the version as `v3.2.1` (or bump it if you have already used that tag)
-   and press **Run workflow**.
-4. It takes roughly 10–15 minutes. Two jobs run side by side, one on a Mac
-   runner and one on Windows.
-5. When both finish, the installers appear on the repository's **Releases**
+3. Set the tag to one you have not used before — each release needs its own.
+4. It runs three jobs: one creates a draft release, two build side by side on a
+   Mac runner and a Windows runner, and a last one publishes the draft. Roughly
+   10–15 minutes.
+5. When it finishes, the installers appear on the repository's **Releases**
    page, and the "Mac & Windows downloads" button on the app's home screen
    points at it automatically.
+
+**Why three jobs.** If each build job creates the release itself, the two race
+to create the same tag: one wins, the other's installer is orphaned, and both
+still report success — which is exactly how v3.2.1 ended up with the Windows
+installer and no Mac one. Creating the release once up front removes the race.
+Every run also uploads the installers as build artifacts, so even if a release
+upload misbehaves you can still download them from the run's summary page.
 
 If a job fails, open it and read the last red step — most first-run failures
 are a missing tag or a version already in use.
