@@ -2,8 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Forum Timer</title>
+<meta name="description" content="A configurable meeting timer that makes overrun visible to the whole room.">
+<meta name="theme-color" content="#14161a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Forum Timer">
+<!-- Sidecars are optional: if manifest.webmanifest / sw.js are absent (e.g. this
+     file was downloaded on its own) the app still runs, just without offline. -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Crect%20width='100'%20height='100'%20rx='22'%20fill='%2314161a'/%3E%3Ccircle%20cx='50'%20cy='50'%20r='30'%20fill='none'%20stroke='%233ecf7a'%20stroke-width='11'/%3E%3Cpath%20d='M50%2020%20A30%2030%200%200%200%2024%2035'%20fill='none'%20stroke='%23ff4d4d'%20stroke-width='11'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAl50lEQVR42u2deZRdV3Wnv33OvW+sKtU8qWxJtuTZJrKNcRgM7oAdMAkhnWERpoRApzvpXkk6SUNYzWpWaNLQWd0rrE6gkzhJk5gONJB0BgMG0hDMFGMMxpZlW7Jl2ZpqHt947z27/7j3lcplyZb0XknvVd29luwlufT83r3f+93f2WefvYWNDwEsEAHa+MORkZGiqnetE92BshfleoQ+0DGQ7cnPCmm0YyT3Ro+CHEeZR3gA4XtG5bBI+NDk5GTphRjYKNg2KkzyK2z8Qf/o6JUWcxNO7lDVGxB2iYjEbyP+nKqa4tJBISJrUFJUVVEOich3MXp3hLtv7sSJ/Wv+ige45FdHAG2S140AhoeHR1S81ynyJlR/xBhjYma1Aa9bp8aSKnNHKbU+W7UxMeSCCDjnHCL/KOhfiYafm5qamkx+3iZ/x7Ur0I3HSgjQNzJxjUXfjtO3GmtGVFcBjtb8vEmZ2JTh1oBuRQQRwUVuEiN/GSEfn5888vAaxW6ZFWkV0A1/xMDA+OVi5d2gbzbGZJxzayE2qfpuSRVvqLA1xuCcq4N8QiP98OzsscfWM9QsiM1G8g27KjM47P+2GP7cGHOzqlpVDdcocQrzFrXZa+6/qmoE+MaYvYi+tVDs9sqli74N0+Eaf31BFLphF9zQ0NjtKvLfjDFXJ4ocJl+WFOA0TqfaEeAlir1PVH9jevr4PWu5Op8KbRs+aXB4/D+JMXeKyPAaRU5hTuNMVFtVNRKRUUTeUih2Uy4tfzUB3p6Lr5ZzhDkaHLx4DBP+uTHmdpfIcrrIS6OJRSTGGOOcuwfn/cLMzNPHz8VXny3QHhAODIy+2Hjmb0HGElX20nuSRgsiFBEP9LgL3RtmZ098p8HcRgC9CrNYc4+I9KUwp7FRUKvqvEbu9rOFWpqAOWpRliSNNNZHJCL2XKA+E6AtEK2D2aV+OY2N9tUiYtZB/YKe+oWgNEDU3z9yUwpzGuc5jKo6EekTa+7p7x+5KYHZnKtCG0CHh3cNO2o/SNJyqc1I40LZjylD9rqpqUNTCbfubBVaAHVavWtNjjmFOY3zHVZVQxEZdlq9ixcoK7bPswiMBobG3m+tfUeazUjjQtsPIDTW7s7li1Ipr3yF02yTy+kWgf3D46+2Il9MPHOqzGm0i/0wkeptc1PHvnyqRaI5NeBXZQT9Q9La5DTaKwSQmM2rMqcSZXtKdR703u1Z+zOpb06jDYEOrbFD2Vy5WimvfI11NR+yPqsxNDRxKeK+q9CVKnQabRgKqMAKam6Ynj7yxNqsh1mf1VCJ3ifG9CQ/kMKcRjuqtBNjelSi963Peshade4f3XGFccH3AD9V5zTaXaWBwBl/79yJw482QDdrgZao/k5jTDZV5zQ6QaWNMVmJ6u9M4DasVeHiyMhQ3tmHEIZOtXpMI402VGlQpismurY0OTndUGYLaNbZ1xprhlN1TqOjVNqa4ayzr00At6Yh1wZ9u6ZdXtLoNJlWVYO+fdU2AwwObt+D0f2kJ7PT6Ezr4XBy5czM0QOxkbb6MmNM4+BrGml0UjhjjBWrL2t4aFR5fWo20uhc2xEzDCBDQ0NdDv9hEdkR/6fUcqTRaZZDRFUPG4JrTGTMVSJMpDCn0aEhoCrCRGTMVUbU7BaRc2rqkUYa7aLSImJFzW5PkGvXrBbTaJ1srLvip1ibp9FC2wGCXOuh3JBc/dRunAO0cYGurF48p4qIEKoSrVlpmwgkoVhEwDMnL7o0moU3VjjptT0n/VBu8IC+9Hqc+VUzCbwOCFWpO0egSqCKQcgYIVJlm+fR63mxeChUsobQxH2StR4SLlTjUvXIQaRgBbEG8S3iGcQkkLsE8jTOJPq8ZKZJqtAvADFA3TnKUUSoSkYMvZ7l8mKB7dks1xXyDPs+VxcLhM4xnskwkvGJAFt3/PbP7+Kf93TRVVeCSkD9mUUkY6kfWyI4sULt6UXqx5epH1siXKiitRBEMDkPydj4i6AKLoX79A5PxzxEtic73inQp4C46hzlMEIExjI+ryz28NKebm7oKrInn2M8k8Fam9iGNWqaJEdjOXfkujPY3jy2EiJ9ebI7euP/lxEwgkaKVkPC2TK1o4tUD8xSevAElUenqR9dQkOHZCwm5yMG1KXWZO0tU1UQ2Z48E1OYGyBbEQJVFsMQA+zK5fgXvT3c1tfLjV1FxnNZYqIU1IFTXBiubrGuDopZY02MKi5UNHRoqKgLcbXGiYpkTZOMbfAGC/hj3XTffDFDb1aCmRKVx2co3X+UpW8+Te3JeaJahCl4mIyXqva6xaGXwnwS5KpzzIUhg77Hvxwc4C3Dg7yip5tu309WfA4XRjiiZy0GjchpG5ys1ufKs1aRq4K+fj2ugUPrEYniYIsZun/4YnpevpPhX7yRyqPTLNxzgKV7D1M/toTJepi8n4KdXE4vBfkkyDtzWf7DxDg/NTTAnkJhFeIojHsEGpHnhbd1qROhkTfRSNGVOqqKWENx7xhdL56gfmyJpW8cZu4z+yg/MoVkPGwhBXvLAu2tB/mi7bxzZJihXDZR4jCuqxXBilzYb90awF0pQLWO15tn8Kevpe9HL2PhSweZ+eRDVPZPnVRs57akx95yQFsRFGU6CJ4LchQRBQGSKHFbhonh1tARLlQQaxj4yavpfc3uBOwfUNk/jS1mEN/GacEU6M2ryotRhAV+aWyE9100wWg+twryBVfjs1RusbH5WQ/2zF/9gOlPPEg4X8HryZ7csNkCYbbKhxRgKgi4ubuLu6+5kj+8bDejGZ8wCFBV7Jrdvo5bC6wBG2DkX9/E7j97I32vu4xouRan/KykQG8ar6xK2Tk+uOMivnTtVdzSu40oAdnrYJBPC/ZsmczENnb87m1c/Lu3YYs+0XId8UwKdKfDPBeGjPo+f3/VFbxn58UYVaIw7GhFfkGwPRNv0izV6Lvjci69840U944RzlXiDSBJge6sGxqvnZgNQ17f18u9L7qaW/t7CYNgdWG4+aVKECuE8xWy23u45KM/ztDb9+LKQZzWM5IC3SkwA8wFIf92bJTPXnMlw75PFIabyl6cjVq7aogGjon33MLEe18Z71gG0aaE2my2D6PAchTxJ3su5b/vuYQoinDObQ1Vfh61Bghmywz81NVc8rE3YAsZtBpuusWi2UwfxCUw//GeS/j58VGiIMBC++aUz/OjS6whXKjSdeN2dv7+6zBdGdwmg9psNpjv3HMJbx0bJQyCra3Kz2NBwvkKxetG2fWROzDFzQV1xwMt62B+SwKzdwFhbrTGdMmplUg1Lvd0erLsUy8w1AvVTQm16XSYucAwN8BtHLlyJFV4Ihhr8T0P63lkChlMVybZkjarOWF1Gm9Pn+f65lNCXYuSkzKdG7ZQ7H5/J6915qOQO3dfylvHzx/MDYjjpoCCGIvxPIwxiAhLYUjFOfaXyzxWLnOkUuMftylHF8u4Z5aQnIerR9i8hylmsAU/BlyByKFO4/LSDf4sYgRXDsjt6KW4d5yFLxxIdhU7V+dkcHi8Izf5PRFmwpBfGxvl93ZfQhhuPMzx8T7FGgMmvunlIGB/pcJ9yyUeLpd5qlrjiUqVAGUuCKk6hxEhEzhMkv/1+gsI4I91kxntIrdngPzlQ+R2D+APF+NUWyXA1eO6641Or2no8PrzzP31Izzzga9g8n7H1n50JNCNHcDX9/fy2auvJAwj7AZugK2CbC0Yw3K9zr1Ly9w9N88/LS5xpFZnJYowCFYga0wMbFK1p6qoSNzKQEHDeBKZBm71kKxkLX5/gfzVw/TcspOuG7eTmdgWn4gp1eNjRRsItoYOf6jI8f/xLU784T/j9eU7slKv44A2QFWVEd/nGy+6mkE/LmrfiIdkw1o0zgweKJf5zPQsfzE1w1PVKpFC3hqySZVe40I61dW//7zmf/XkSgJ9EOGqISh4/Xm2vWoXfa+/guK1I+AZ3Er9pNfakG+uYvI+h379bpa+fjiu1Is0BXpD37BAKXJ8/uoruKWvd7Uuo9URNayFNexfKfEHx07w6elZ5sOQorXkEsvR8NKtWuVKUmuhgSMqB4hv6L7pIgZ/7jq6b74IFKJyfWN8rlMkYwnnKxx8x18TzlWQjO2oEzAdBbQnwlQQ8KGdF/NbOy7akEWgJvbCeB6z9ToffuYYfzo5yXLo6PEsvsR9Nzb8oklsMdSBK9VBoOflOxj95ZvJXzlEtFzbkJoMjRxeT46lrz/FoV/7XMf56Y7JclgRlqKIl/d089Hdl6DJdra0VKA0zlRYy2enZnjTowf4/Pw8eWPpsjbprH0eI+HIZOPeHNWDc8x/7jG0HtF1/Rgm4+FqYUu9tRjBVQPylw8RzVdYuf8otpDpGKg7BmiRuFPRxy+7lIsLeTTJHrQqwsQrl5zyG08c4j1PPU2QdEByXOBO8MlGjMl5oLB871OUHjxBce8YmfEeXCVoLdQiECmFq4dZ+n9PEi3XOmbTpSOA9kSYCUL+1egw75oYb7lvDlXxfJ+HV0r87P7H+L+z8wz5/nMno1/oSDqo2GKG2uEFFr94kMxoF4VrR9FKmPiU1tgdDSP8gSKm4LP4pYPYfGeodNsDLUBdlbFshr+4bDcF09rOkpEqnufx1fkFfnr/4xyoVhn0fcLz4ZObyUbkPFw1ZOGeg9iCT/GGcTR0Sbem5q+OGEFrIfkrhyk/PEXt0Bwm67X9SfK23xJqeOd/MzrCcD5H5FzL3nSkivV97joxyY8+vJ/lKKLP8wg6QIk0UsS3mK4MRz70NY78l69hCn4Mc4vevmq8RT701hfFjSU7wHK0NdBC3FtuVy7LO0aG0ShqmdUIVbGex13HT/DOA0/SbS2+MYSdtEOWFDz5gwVmP/kDjnzwnxIVbc1nECO4lTrdL7mI7psvwq3U277Wo62BbqjzL42O0J/L4pxridWIEs987/wCv5jAbDi5IdJpoaHDGygw878fZPJP78cbyMf2o1WJFiMM/tx1cVPJVKGbV+dfTNS5FVmNxs7f/uUV3vzYQYrGYEQ6fp6dhg5/sMDkn9zP7Gf2xVvXLYC601S6bYHeCHVWQMVQjhzvPPAEU0FA1piOVeZTel7fcvT3vk553yS2KxPXX7dKpd/U/irdlkALEKhjyPf56YF+1LmWVFLG6mx476Gn+PbyCv2e11me+QyINpm4Uu/IB75KVKqfLEttVqXLAcXrxylcMdTyvPemB9qIsBw5Xt3bw85iAY0cpkl9jpJF4N9Nz/AHxycZ9v2OyGacS/bDdmUoP3SCyY/dF3ckda4Fr+uwXRm23bYbrUUbXqu9ySxHXOD+tuGh5Hfa5KuBGMNCPeA3n3qaLms3jc04nZ+2fXlmPv0wy99+Btudbdp6iDG4csC2Wy/BHy7igqgtG9a0HdACVJxyaTbHS7u7oQVb3I0ajQ8/c5QnK1Xyxmz6oeaNK3biY/fhKi2o9xDQekRmoofii8bQStylNQX6DBaD5SjiR3q30ZXxiZpcDDoUYy0HSyX+aHKSvs3mm0+n0k6xxQylB46x8MUDsUo3WbCvqogRum/ZkcwdToE+A3sQz/l7bd+21q38RfjIsRMsh+6CngY/75Fskc9+8iGipWrTNdRiDK4WUdw7jteXx4XtZzvaCmgB6k4Zz/jsLRabthuOOOd8uFTmUzOzbPPMllDntYpq8j7l/dMsfvUQtjvTnEo3bMdIF/ndA3HnpTYTiLYC2ohQdo7ri0VGc1mc06YEQONj2XxyZpa5IMQXw5YLVcQTFj5/ID502ySA6hym4FN88XY0cG1nO9pOoUNVXtrTDcbgmshuKGCNYaVW539NTVO09lmjircMz04xxQzL3zlC+cETmGKTmy0Sj8MoXDOMZJOxcinQp7cIvjHc0FWMlaXJzAbG8K3lZQ7VauSNbNk5lSJxKejS1w8jvmmqeCke7RyR3dWP35eLT7BLCvRp1bnPs1yWy8VAt+Bx9ndz80ROka08jtE5TNZj5VvPEC1WMc0sDpMDvH5fDn+sB627tvLRpp1UpOaUXdksw5lM7NWasRtiKAcBX11corBF7cazMj1ZS/XQPJUDs0jOa8p2qHOYvE9ud39cAJUCfWqFDlS5OJvFt6apkl5VBSs8XqnyTK1OdgvbjdXra+LG55V9U4hvm6+ZNkJmoqftWhy0neW4qpBvekHo4jvI/SslVqIIm05/TiwclB+ajPtvNPc4RSNHblcf4pu2Whiadvt2jWb8lnw5UOX7pVKK8pqnlmQstcMLySlu29wLRortzSEZr60Oz7YN0A4lYwzXFApNZzgEQZ3yZKWGJ6ndWA1PCGZLhEs18M797KGIoIEjs30bXm8u8dEp0M/90gO1JksdGy1ul4OAJ2vVTVXA3+yFEc8SLtaoP7MQj01u9rqELk3bnc4iRArbrGE8k2lJyq7hyVPLsf5RqElhUfOvY7oy+INFCNsnLdo2Ch2pss3ak0A3k+EQ4YlajdlklFuqz2usQuioPTkXd0I6V4WWkwX//lAx2QJPFfqU2Ylmi4c0WYUvhSFVp5t1vmRTyhou1WjRmTY01NRyvGCGogVhRVK7cbpr3Mo+dWn56HlbA6WxBS+O2azXOgU6Bbot7EarWn15IpgU3VNfZ69FPkGk7eaFt809NwJVpyyFYVONAY0IOMfluRwjGZ+6S1N3q8Kc7BbmLh9qvqhIBK2H8XQBkxYnPecJ2BjTdrBajS/WOWQ7VMCJEBkBa1LbcToWmwVQTw7urB9ZbKt6jrar5WgM43lhcCEyMbyu0TM6VGw1wi4H9NeUPV6Gmmo6vD7xcxo5bHeGzHgPGjRZx5zsPOK1l7Hz2sk/h6o8Wa3xEjk5DluTiaqN7791ikSKhHpynLARXM6w2OPz9ECGx0ZzTF7UzeSnZsjcu4R22XSVCBA6vOEuvL48NNPIURXxDcH0CtFKva0mz7YR0EKgyuF6ncgYnICnIEEyBztKqM8algoex/oyTPZleGw8z+NjOSZ7M0xt81ksWGoGbH+e6mMj2K88gYps+byHiODqjuzFvdieDK4UnLP3VQArhHNlXKmOKWbapi66bYBu+OgnShXsSoBVR63gcXw4z4neDAdGcxwZyHJwLMfxvgxLBY9qxhAJWAeeU/xIyQVKPnJYU4c9A0xnbdsd5LxARKPOkb9yCPEsqvVzr79QRayh9vRiPElAhHYZ4NFWQOcUHjQhH/2JcR4dyXG8z2eqN0M5awhNfPn9SPFDxTqluxyyqr3J6GEVUGvQwJHbPYjfXyBcqrakC2fHZzh8S+Hakbg3RwvWFfUjS203SKhtgHYoWRGerNX4n9f3kOsr4FVD/EjpqjqkMW448dMqrC4GT7kACiL84Xh29tJXDmG6t7BSNxrEjHWTv3yw6QYxjVPk1YNziVCkBf6nlmjfwmyFwmOzdEeKX48XLs/KaCQqfEaK5Bl6btm5WoG3Zd1Gcp6w68Xbm+8c2qirXqhSP7rYmrrqTQn06sIlovTkHOqbpnyZGIOrhHTduB2/P9+27V/Pj1bEFXHdL9+BOpr6csebM4ba0UWC2XLS54MU6NMuNgRK358ER3NF4wIuaf/a86pdaDlo+wlOGyUSWgkpXDlM14sncOUmZ6Qku42VfVO4UoCY9kLItBfPiuQ8Ko9OEcyUWvPtd9D3Y1eAb9mSFtoIrhLS+6N78PpyTQ8SanROKj1wPM4/p63AXsCfZSz1o8tUHp+JG6I007bKCK5Up3DNCN03TXTEnL1WLwZdPSSzvYfe1+zGrTSpqMlQomCmTPnhSSRn0952Z6QAoaN0/7GWKIAS1x0Mvvm6eLW/1RaDKwH9b7ySzEQPrh42tY6In6CWyv4pgply0rCGFOjntwgOyRiWv/k00VKtBU26T87Z63n5zlil7RZQ6USdsxdvo/+NV7XG7yaHl5f+6Sk0dOlIijO8ZpicT/XQHJXHpjF5r+mBN5r8Y+RXXhK/XqSbPuMh1uBKAcPvupHMaHfT6oyC8S3BbJmV+48m98WlQJ+xqlYjFu450JLEvRghKtcpXDHE0Nv2Ei1W26qgZiNgDher9Nyyk747Lm/JOIpGo/Plbz5N7chiMlOcFOgzv3geS/cepn5sGZPxWjA80hAt1xh6+166bppI7MwmlGkRXD3E7y8w/hsvW33qtWRtEzgWvnAgthptmjJqT5lSMBmP+rEllr5xGNOK4ZESd7MXzzDxvlvjoTf1aPPtIApoLWL83a8gd+lAS6a+qotntVQOzFB64FhyP1Kgz3JxqEjWY+4z+5Lmgs2/1TiNF5C7pI/t734FWos2Fc/iGaKFKkNveRF9r72McKHSGmuV1D/PfvphonLQ1natbd+ZqmLzPuVHpln40sHmJzituenhQpXe117G2L9/GcFcJfbpnQ6zbwhmyvHn+vWXES20Zp2gTrEFn/Kj0yx88SC2qzX3YespdEMZMjaes7fcupMRYg3RYpWhn7uOwTddRzhb7mioxTeE81W6rh9n+3tuSWZxt/Ae+K2/B1sS6FV12N9alW6YTVcJmXjvKxn42esIpkrxCY4O8yDixcpcvG6UXR+5A1vMJIVY0prrn0/UueXXfysqdEMhshugEBK/tisHTLznFsZ+9Ydx5QANo87IfiQ9McK5Cn2vu5ydH7kDU8zgqmHrtvc36tpvYNhCsfv97Q10nPGoHVnEFjN0v/TiZNdLWgOFxocBtr1qF/5QkeVvH8GVA0zOa7v5IWstkwYRWgkZftsPMfG+W1dLb1v1ZVSn2O4sK/98hOMf+VZbnRvsbIUmyUsXM0zf9SDVg7OtTRsJYIRgukz/T1zFpX/8BvKXDca+2kh7FTOJxJmMxSq2kGHHh25j/LdegVupx0+WFr5XMYKrhZz42H1xurNDnFj7K3Tjm5eckoiWa/Tetgetha2/geWAzFg3vbfvjg8aPHgCDeIZf1zIg+MSe2WtR0RLNXpesZMdH7qdrpsmTqbmWkichg6vN8fs/3mY2U8/jNeTa9u8c8cCjSo271HZN0V2Ry/F60ZxLS7aj1UpQnxL762XUHzRKLWnF6kdmo+FPHOewRZZtRfRYpXMWDfjv/lyxv7dD2N7skQrtZb72sZCsPbUPM+878vJl6WDFsmDw+OdU1GZlJbaos+ld76RzPae1i6C1vh2dQ7bncVVQhbuOcDMpx6isn8K8QymkEFMPJio5VvAIoiJ34OrhrhKQGb7Nvp/4kr6f/IqMqPdREvV1QY7rf7cjafBk7/8d5S+fzzJO2sK9MYtiIRouU5x7xiXfPTH43EIDS/c6odCpIgVbHeWaKnG4leeZOELB1i57wiuHmKyHpK1SVmmxuf10DNXcIn/IY3uUKpoPcJVQwAKVw3Re/tl9N62O65nLgW4erhh2QYNHV5/nqP/9V6mP/49vL5826fpOh5oSHb75ioMvX0vE++5JT6suYEpJY0cYk2s2PWI8vePs/SNwyx/6xlqh+ZiAEUwmbjXW+MxLXLqb9rqKY/QoZFDg/jf4lky4910vXg73S/fQdeLJ+Kak5V6DLLZuMe/hg5/oMD85x7j8Hu+iOnqjKzGpgA6XiXGdRkT730lAz91NeFCdcN3+zRyiBFMwUd8S7RYpXJglsq+KcoPTVI7vEAwUyJaqqFO4/N7p4BCMvFoYtuTw+vLkb1oG/krhylcO0L+8iH84SI4JSrX40J6s7E+tjEAqLxviqd+9W6iSth2/TY2P9BCMrTGccnH3kDXjdsJ589TXYbT+DiSNZicFx9Fckq0XCNcqlF/ZhFUqT4xR7RUg0ZuWGPLlL9iKJ6VPd6N15fH9uTiLEbk0GqIS6ZKnY+UoUaKyXlEpTpP/MJfJ/l+v6N88+YAOlFpDRy24LPz919H8brR86LUp4I7zkjEWQnxbQzkaTIEjZPXDatB6E6+hsh5yyo0YHalOod+9W7K+6bavvhocwPdSLVVQ0xXhl0fuePCQL0+U6BJi5zTPbKTnPGqx74AabH1MJd+cAJvW66jYYZNMAUrLj5fd2N6m+8/0ZQVSnYYxZpT/2rsQEobwdzb+TBvCqCf9waFjjSeuwBsKwFIgT5DqB88gdefT6Fe591tV4ZoZfN+8TfV0WeNFJP1cOWAJ3/l75n7m0fwhwpx6sxt5ebQyabJQIHyvime+IXPUt43FXvmTfaF75xajrO4ecYzaBix+JVDaOjovumi1YzIlmvY6BSM4PXmWPj84zzzH79MMFXu+GzGps1ynP6TxVVE0WKNnlfuZOK9ryIz1h138+/AkynnbDGSUtvjf/BtZj7xIJK1mIzt2Dzz1gW68QGtIVyKK9Um3vsqem7ZiStvbE1EO1gvsYLtyVI9OMuR//xVVr5zFNubW00rbtr7vdmBjqGOy0I1dAz+zDUMv+MG/OEuoqUq6tg8DWeSTR7bnUVrIbN/8wiTf/QdouUatiu7KS3GlgT6pAWBaKlKZmIbI++6kb47Lkc8i1upxZWTneqvE5BN3sdkPZa/9TQnPnYfpQeOYbsy8aTXaIvc5i0D9BoL4mpxnXH3S3cw9NYfovslE3Gx00q9s8B2iirYgodkPCr7p5j55EPM3/1YXKhfzMQdp7bQHd5yQDfUWowQLdfACN03X8Tgm66j++Y4G+LKwWplXdstHpXVM34m78fjIRKQF750MLYXPbnV4q0td2u3JNCND2/iEXFupf4ssIvXj2O7MjHY9QhV4lMkFwpuTWqoNW4qYws+GjgqB2aY/fTDLHwxAbk7Gx/ZirbuZtKWBvp0YOevGKT3tj1su/USMhM9qyegte5QlzT63sg6jEaBU9JgXHyL5DxEIJgts/zNp1n4wgFKDxwjKgexT97iIK8F2rFlB56dBuxKgNYi/OEihReN0fOKHXRdP44/2oXJ+2joYuUOXbLYSko/1yw+X/CKNmRkXWWemLhVgfgWyVg0cATTJSqPTLH0tadYuf8o9SOL8QmZgo9Y2TILvjORglShTxVGkn7IEVElAAWvL0duzwBdN26ncM0IuZ39eP15TN6LdyEjB5GiSRuuxu9P6+G95CSsd7IKD8DVQqKFKvWjS5T3TVJ64DjlhycJZkpo6JJMhl310mmsV+ihsSNizHaND7qlSv2sq8Nqwb0GLrYdgUOyFq8vT2a8m9ylA2Qmesjt6sPblicz0bNaBHTKc3nJWLRwIT5dE0yXCGcr1J5ZpH5kkerBOerJUEtXCuJDA8mpGJENOmm+GZRZRNS5ozI4NP4dMXKjqjo2WbFSq+FunChpnBfUIFo9NyieiUHvjSv8/KEC3mARorWOTsEYXKlO7chi3AVppR6nCxNQV+2Gb+KzhImXJmX4+cKJiFGn93vAfHo9zmKhlpAlniC+v3rqRDWu6AsXKoAQLVTRR2dOb2n8+KCsWIPpyjz7dRKA00XeWce8h/Bd4DWkGnCOgPOsS7d69Mv3SFzyWn0+2Xip4fCUeINk3eukcdZ3A4Tveoo+1Fifp9elZZd2DezPxjRFdsMMIYo+ZFTcQVWNUqDT6GSgVTVScQeNde4RVY6sFhCnkUbHPRNFVDlinXvETE9Pr4hwfzLmNl2FpNGJGQ5EuH96enrFAIjwD5IajjQ61W/ElQj/AOABaCTfUOMi0jx0Gp0XxjkX4eQbJADbmZmjT6D6tcR2ROk1SqNDIkrGNH9tZuboE4A1JJWzDvm4SGo80ug0uyHikI8n6z8xiSJLzUSfd5GbSlQ7zXak0e6hgHGRm6qZ6POJMEcNeG1pcnJK0buMMZLajjQ6wW4YY0TRu0qTk1OABbSxCHSAqM3c6ZyrpSqdRkeos3M1tZk7G7a5sShsAG3mThzeD/opY4xJVTqNNldnA/qpmFnMeqAb1Iuo/YA6t5SqdBrtrM7q3JKo/QDrBu3ZdT9oy+Wl2Vy+y1hrX53UeKS56TTaTZ1tFLnfmZ059rcJw6s73OvTdBIDfJUdGJ5/yIi5LC38T6ONwomIceoen53quxYeiRKYVxXanELOgUfqivxK8vvUdqTRTnZDYzYfqT+b2edajrV/yauUlg/mC11irb1VVcNUpdO4wBEaYzzn3O/MTR//M+KyjeckLp5vZ9AC0eDQ2JfEmFcnUHvpdU3jQsAsIp469+WZ6eOvabB5qh80LyDvYiT3FlWdEhGPNJWXxgVYBIqIp6pTRnJvWZ/VOBugHSBTU4cmXRj9mKrOi8izVpRppHEeFoFWVeddGP3Y1NShSdZsopwt0A2o7dzc5H0audsTqE0KdRrnK6OhqvMaudvn5ibvY12K7lyAJrEZ3uzsie+sgzq1H2lspM1YhXl29sR3TrcIPBegAcJTQG2TP08jjVYvAO0pYD4j1s4mFfcsqEGPJwvFFOo0WprNAD1+LjCfLdANqG0MtXeDqt5jjPESX5P66jTO2S8Dzhjjqeo9Gnk3JDCftQuw5/A/T2o+FpfKpeW78oUuROTW5LRLmKxC05MvaZwpS5GIWBERVX3/zNSxd5XLiys8T6651UA33ogBpFxa/mqx0PVthb3GmFFVTcFO44xABqwxxqjqPlF928z08T9tcHWuT3zb5JtSwCuXVw6USxfdmS9U6sANxphCCnYaZwDyoqp+cGaq923l8qHH12Qyzrl+qFWgrT4eBgbGLxcr7wZ9szEm45xjzaPDpHBvSYgbamuNMTjn6iCf0Eg/PDt77LH1DDUTrYRL1pr4vpGJayz6dpy+1Vgzoo0+xyfftJAWPG3mRV5DZa0kfbVd5CYx8pcR8vH5ySMPJ/+9aVXeKKBZp8IRwPDw8IiK9zpF3oTqj8SPmviLmwDe+PCy5j2lKt456ru2yaoAJs4PCCLgnHOI/KOgfyUafm5qampyjSIrLc6ObSQ4Jvm1mnbpHx290mJuwskdqnoDwi5pzHxodEhOxy10VJxs5SINkVKUQyLyXYzeHeHumztxYv+av7Khad7zoYSyxh+t0joyMlJU9a51ojtQ9qJcj9AHOgayfZ1qp9F+yiygR0GOo8wjPIDwPaNyWCR8aHJysvRCDGxE/H/6MhvjzHFNoAAAAABJRU5ErkJggg==">
 <style>
   :root {
     --bg: #14161a;
@@ -94,9 +104,13 @@
   .hintbar { text-align: center; color: var(--muted); font-size: clamp(11px,1.3vw,14px); margin-top: 10px; }
   .hintbar kbd { background: rgba(255,255,255,.09); border-radius: 5px; padding: 1px 6px; margin: 0 1px; }
 
+  /* reset the inherited hero-numeral typography inside the run empty state */
   .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-           gap: 16px; text-align: center; color: var(--muted); }
-  .empty h1 { color: var(--fg); font-size: clamp(24px,4vw,40px); margin: 0; }
+           gap: 14px; text-align: center; color: var(--muted);
+           font-size: 15.5px; font-weight: 500; letter-spacing: normal; line-height: 1.5; }
+  .empty h1 { color: var(--fg); font-size: clamp(24px,4vw,40px); margin: 0; letter-spacing: -.01em; }
+  .empty p { margin: 0; max-width: 46ch; }
+  .empty .acts { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
   /* ===================== MANAGE VIEW ===================== */
   #manageView { display: none; max-width: 960px; margin: 0 auto; padding: clamp(16px,3vw,40px); }
@@ -186,8 +200,30 @@
   fieldset legend { padding: 0 8px; font-weight: 700; font-size: 13px; color: #dfe4ea; }
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
 
+  /* ===================== EMPTY STATES ===================== */
+  .blank { text-align: center; padding: clamp(28px,6vh,64px) 20px; border: 1px dashed var(--line);
+           border-radius: 16px; background: rgba(255,255,255,.02); }
+  .blank .icon { font-size: 34px; opacity: .5; }
+  .blank h3 { margin: 12px 0 6px; font-size: 19px; color: var(--fg); }
+  .blank p { margin: 0 auto 16px; color: var(--muted); font-size: 14px; max-width: 46ch; line-height: 1.5; }
+  .blank .acts { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+  /* ===================== TOAST ===================== */
+  .toast { position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 130%);
+           background: #232830; color: var(--fg); border: 1px solid var(--line);
+           border-radius: 12px; padding: 12px 16px; font-size: 14.5px; font-weight: 600;
+           box-shadow: 0 12px 40px rgba(0,0,0,.5); z-index: 40; display: flex; gap: 12px;
+           align-items: center; max-width: min(560px, 92vw); transition: transform 260ms ease; }
+  .toast.show { transform: translate(-50%, 0); }
+  .toast button { background: var(--accent); color: #08120b; border: none; border-radius: 8px;
+                  padding: 7px 12px; font-weight: 700; font-size: 13.5px; }
+  .toast.warn { border-color: #7a2a2a; }
+
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; font-size: 14px; }
+  .kv dt { color: var(--muted); } .kv dd { margin: 0; font-variant-numeric: tabular-nums; }
+
   @media (prefers-reduced-motion: reduce) {
-    *, .bar-fill, .ring-fg { transition: none !important; }
+    *, .bar-fill, .ring-fg, .toast { transition: none !important; }
     body[data-phase="overrun"] .clock { animation: none; }
   }
 </style>
@@ -234,12 +270,20 @@
       <button class="tab" data-tab="library">Timer library</button>
       <button class="tab" data-tab="history">History</button>
       <button class="tab" data-tab="display">Display</button>
+      <button class="tab" data-tab="data">Data</button>
     </div>
     <div class="panel-sec active" id="sec-meetings"></div>
     <div class="panel-sec" id="sec-library"></div>
     <div class="panel-sec" id="sec-history"></div>
     <div class="panel-sec" id="sec-display"></div>
+    <div class="panel-sec" id="sec-data"></div>
   </div>
+
+  <!-- hidden file input for JSON import -->
+  <input type="file" id="importFile" accept=".json,application/json" style="display:none">
+
+  <!-- toast host -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <!-- ===================== SUMMARY VIEW ===================== -->
   <div id="summaryView"></div>
@@ -273,6 +317,48 @@ function fmt(ms) {                 // mm:ss (or h:mm:ss beyond an hour)
   return (neg ? "-" : "") + core;
 }
 function fmtSigned(ms) { return (ms > 0 ? "+" : ms < 0 ? "−" : "") + fmt(Math.abs(ms)); }
+
+const APP_VERSION = "2.0.0";
+
+// ---------- toast ----------
+let toastTimer = null;
+function toast(msg, opts) {
+  opts = opts || {};
+  const t = $("toast");
+  t.className = "toast" + (opts.warn ? " warn" : "");
+  t.innerHTML = "<span>" + esc(msg) + "</span>";
+  if (opts.actionLabel) {
+    const b = document.createElement("button");
+    b.textContent = opts.actionLabel;
+    b.onclick = () => { hideToast(); if (opts.onAction) opts.onAction(); };
+    t.append(b);
+  }
+  requestAnimationFrame(() => t.classList.add("show"));
+  clearTimeout(toastTimer);
+  if (!opts.sticky) toastTimer = setTimeout(hideToast, opts.ms || 3200);
+}
+function hideToast() { clearTimeout(toastTimer); $("toast").classList.remove("show"); }
+
+// ---------- empty-state helper ----------
+function blank(icon, title, body, actions) {
+  return '<div class="blank"><div class="icon">' + icon + '</div>' +
+    '<h3>' + esc(title) + '</h3><p>' + body + '</p>' +
+    '<div class="acts">' + (actions || "") + '</div></div>';
+}
+
+// ---------- file download ----------
+function downloadFile(name, text, mime) {
+  const blob = new Blob([text], { type: (mime || "text/plain") + ";charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name; a.rel = "noopener";
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+function stamp() {
+  const d = new Date(), p = (n) => String(n).padStart(2, "0");
+  return d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + "-" + p(d.getHours()) + p(d.getMinutes());
+}
 
 // ---------- sound ----------
 const SOUNDS = { none:"None", soft:"Soft", beep:"Beep", chime:"Chime", bell:"Bell", alarm:"Alarm", buzz:"Buzz" };
@@ -352,6 +438,109 @@ function load() {
 function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) {} }
 
 function recomputeSessionPlanned(s) { s.plannedMs = s.timers.reduce((a,t)=>a+t.durationMs, 0); }
+
+// ==========================================================================
+//  EXPORT / IMPORT
+//  localStorage does not travel between devices or browsers, so the JSON file
+//  is the backup and the transfer format. CSV is for analysis elsewhere.
+// ==========================================================================
+function exportJSON() {
+  const payload = {
+    app: "forum-timer", schema: 1, appVersion: APP_VERSION,
+    exportedAt: new Date().toISOString(),
+    library: store.library, meetings: store.meetings,
+    history: store.history, settings: store.settings,
+  };
+  downloadFile("forum-timer-" + stamp() + ".json", JSON.stringify(payload, null, 2), "application/json");
+  toast("Backup exported.");
+}
+
+function csvCell(v) {
+  const s = String(v == null ? "" : v);
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+function exportCSV() {
+  if (!store.history.length) { toast("No history to export yet.", { warn: true }); return; }
+  const secs = (ms) => (ms/1000).toFixed(1);
+  const head = ["date","meeting","session","timer","planned_s","actual_s","variance_s","paused_s"];
+  const rows = store.history.map(r => [
+    new Date(r.date).toISOString(), r.meetingTitle, r.sessionTitle, r.timerLabel,
+    secs(r.plannedMs), secs(r.actualMs), secs(r.varianceMs), secs(r.pausedMs || 0),
+  ]);
+  const csv = [head, ...rows].map(r => r.map(csvCell).join(",")).join("\r\n") + "\r\n";
+  downloadFile("forum-timer-history-" + stamp() + ".csv", csv, "text/csv");
+  toast("History exported as CSV.");
+}
+
+function validateImport(obj) {
+  if (!obj || typeof obj !== "object") return "That file is not valid JSON.";
+  if (obj.app && obj.app !== "forum-timer") return "That backup is from a different app.";
+  const arrays = ["library","meetings","history"];
+  for (const k of arrays) if (obj[k] != null && !Array.isArray(obj[k])) return "Backup field '" + k + "' is malformed.";
+  if (!obj.library && !obj.meetings && !obj.history) return "No timers, meetings or history found in that file.";
+  return null;
+}
+
+function applyImport(obj, mode) {
+  const inc = {
+    library: Array.isArray(obj.library) ? obj.library : [],
+    meetings: Array.isArray(obj.meetings) ? obj.meetings : [],
+    history: Array.isArray(obj.history) ? obj.history : [],
+  };
+  if (mode === "replace") {
+    store.library = inc.library; store.meetings = inc.meetings; store.history = inc.history;
+    if (obj.settings && typeof obj.settings === "object") {
+      store.settings.rendererId = (obj.settings.rendererId in Renderers) ? obj.settings.rendererId : store.settings.rendererId;
+      store.settings.activeMeetingId = obj.settings.activeMeetingId || null;
+    }
+  } else {
+    // merge: keep everything existing; add incoming, re-id anything that collides
+    const libIds = new Set(store.library.map(x => x.id));
+    inc.library.forEach(t => { const c = JSON.parse(JSON.stringify(t)); if (libIds.has(c.id)) c.id = uid(); store.library.push(c); });
+    const mIds = new Set(store.meetings.map(x => x.id));
+    inc.meetings.forEach(m => { const c = JSON.parse(JSON.stringify(m)); if (mIds.has(c.id)) reid(c); store.meetings.push(c); });
+    const hIds = new Set(store.history.map(x => x.id));
+    inc.history.forEach(r => { if (!hIds.has(r.id)) store.history.push(r); });   // dedupe by id
+  }
+  // repair derived fields and guarantee the shape the app expects
+  store.meetings.forEach(m => {
+    m.pausedTotalMs = m.pausedTotalMs || 0;
+    m.sessions = Array.isArray(m.sessions) ? m.sessions : [];
+    m.sessions.forEach(s => { s.timers = Array.isArray(s.timers) ? s.timers : []; recomputeSessionPlanned(s); });
+  });
+  store.history.sort((a,b) => new Date(a.date) - new Date(b.date));
+  save();
+  loadMeetingIntoRun(activeMeeting(), false);
+  mountRenderer();
+  const n = inc.meetings.length + inc.library.length + inc.history.length;
+  toast((mode === "replace" ? "Replaced with " : "Merged in ") + n + " records.");
+  renderManage();
+}
+
+function handleImportFile(file) {
+  const rd = new FileReader();
+  rd.onerror = () => toast("Could not read that file.", { warn: true });
+  rd.onload = () => {
+    let obj = null;
+    try { obj = JSON.parse(rd.result); }
+    catch (e) { toast("That file is not valid JSON.", { warn: true }); return; }
+    const err = validateImport(obj);
+    if (err) { toast(err, { warn: true }); return; }
+    const counts = ((obj.meetings||[]).length) + " meetings, " + ((obj.library||[]).length) +
+                   " library timers, " + ((obj.history||[]).length) + " history rows";
+    openModal('<h2>Import backup</h2><p class="hint">Found ' + esc(counts) + '.</p>' +
+      '<p class="hint"><b>Merge</b> keeps what you have and adds the incoming records. ' +
+      '<b>Replace</b> discards everything currently in this browser.</p>' +
+      '<div class="modal-actions"><button class="btn ghost" data-act="closeModal">Cancel</button>' +
+      '<button class="btn" id="imp_merge">Merge</button>' +
+      '<button class="btn primary" id="imp_replace">Replace all</button></div>');
+    $("imp_merge").onclick = () => { closeModal(); applyImport(obj, "merge"); };
+    $("imp_replace").onclick = () => {
+      if (confirm("Replace ALL meetings, timers and history in this browser?")) { closeModal(); applyImport(obj, "replace"); }
+    };
+  };
+  rd.readAsText(file);
+}
 
 // lookups
 const findMeeting = (id) => store.meetings.find(m => m.id === id);
@@ -544,10 +733,16 @@ function renderRun() {
     $("labelText").style.display = "none";
     $("viz").style.display = "none";
     $("runMeta").innerHTML = "";
-    $("clock").innerHTML = '<div class="empty"><h1>No meeting loaded</h1>' +
-      '<div>Open <b>Manage</b> to build or load a meeting.</div>' +
-      '<button class="btn primary" id="_openMng">Open Manage</button></div>';
-    const b = $("_openMng"); if (b) b.onclick = showManage;
+    const noneAtAll = !store.meetings.length;
+    $("clock").innerHTML = '<div class="empty"><h1>' +
+      (noneAtAll ? "Nothing to time yet" : "No meeting loaded") + '</h1>' +
+      '<p>' + (noneAtAll
+        ? "Build a meeting — sessions, then timers inside them — or drop in the sample to see how it fits together."
+        : "You have saved meetings. Open Manage and press <b>Load</b> on the one you want to run.") + '</p>' +
+      '<div class="acts">' +
+        '<button class="btn primary" data-act="doneToMeetings">Open Manage</button>' +
+        (noneAtAll ? '<button class="btn" data-act="reseedSample">Add sample meeting</button>' : '') +
+      '</div></div>';
     $("btnStart").disabled = true; $("btnReset").disabled = true; $("btnEnd").disabled = true; $("btnNext").disabled = true;
     document.body.dataset.phase = "idle"; document.body.dataset.paused = "false";
     return;
@@ -733,13 +928,69 @@ function renderManage() {
   else if (activeTab === "library") renderLibrary();
   else if (activeTab === "history") renderHistory();
   else if (activeTab === "display") renderDisplay();
+  else if (activeTab === "data") renderData();
+}
+
+// ---- Data tab ----
+function renderData() {
+  const bytes = (() => { try { return (localStorage.getItem(STORE_KEY) || "").length; } catch (e) { return 0; } })();
+  const nTimers = store.meetings.reduce((a,m)=>a+m.sessions.reduce((b,s)=>b+s.timers.length,0),0);
+  let h = "";
+
+  h += '<div class="card"><div class="ttl" style="margin-bottom:6px">Backup &amp; transfer</div>' +
+    '<div class="sub" style="margin-bottom:14px">History lives only in this browser — it does not follow you ' +
+    'to another Mac, another browser, or a private window. Export a JSON file to back it up or move it.</div>' +
+    '<div class="list-actions">' +
+    '<button class="btn primary" data-act="exportJSON">⬇ Export backup (JSON)</button>' +
+    '<button class="btn" data-act="importJSON">⬆ Import backup…</button>' +
+    '<button class="btn ghost" data-act="exportCSV">⬇ History as CSV</button>' +
+    '</div></div>';
+
+  h += '<div class="card"><div class="ttl" style="margin-bottom:10px">This browser holds</div>' +
+    '<dl class="kv">' +
+    '<dt>Meetings</dt><dd>' + store.meetings.length + '</dd>' +
+    '<dt>Timers in meetings</dt><dd>' + nTimers + '</dd>' +
+    '<dt>Library timers</dt><dd>' + store.library.length + '</dd>' +
+    '<dt>History rows</dt><dd>' + store.history.length + '</dd>' +
+    '<dt>Stored size</dt><dd>' + (bytes/1024).toFixed(1) + ' KB</dd>' +
+    '<dt>App version</dt><dd>' + APP_VERSION + '</dd>' +
+    '<dt>Offline</dt><dd id="swState">checking…</dd>' +
+    '</dl></div>';
+
+  h += '<div class="card"><div class="ttl" style="margin-bottom:6px">Danger zone</div>' +
+    '<div class="sub" style="margin-bottom:14px">Both are irreversible. Export a backup first.</div>' +
+    '<div class="list-actions">' +
+    '<button class="mini danger" data-act="clearHistory">Clear history</button>' +
+    '<button class="mini danger" data-act="factoryReset">Erase everything &amp; reseed</button>' +
+    '</div></div>';
+
+  $("sec-data").innerHTML = h;
+  reportSWState();
+}
+
+function reportSWState() {
+  const el = $("swState"); if (!el) return;
+  if (location.protocol === "file:") { el.textContent = "n/a — opened as a local file"; return; }
+  if (!("serviceWorker" in navigator)) { el.textContent = "not supported by this browser"; return; }
+  navigator.serviceWorker.getRegistration().then(reg => {
+    if (!reg) el.textContent = "not registered (sw.js missing?)";
+    else if (navigator.serviceWorker.controller) el.textContent = "ready — works with no internet";
+    else el.textContent = "registered — reload once to activate";
+  }).catch(() => { el.textContent = "unavailable"; });
 }
 
 // ---- Meetings tab ----
 function renderMeetings() {
   const el = $("sec-meetings");
+  if (!store.meetings.length) {
+    el.innerHTML = blank("🗓", "No meetings yet",
+      "A meeting holds an ordered list of sessions, and each session holds timers. " +
+      "Start from the sample to see the shape, or build one from scratch.",
+      '<button class="btn primary" data-act="newMeeting">+ New meeting</button>' +
+      '<button class="btn" data-act="reseedSample">Add sample meeting</button>');
+    return;
+  }
   let h = '<div style="margin-bottom:14px"><button class="btn primary" data-act="newMeeting">+ New meeting</button></div>';
-  if (!store.meetings.length) h += '<div class="card"><div class="sub">No meetings yet. Create one to begin.</div></div>';
   store.meetings.forEach(m => {
     const nTimers = m.sessions.reduce((a,s)=>a+s.timers.length,0);
     const planned = m.sessions.reduce((a,s)=>a+s.plannedMs,0);
@@ -815,8 +1066,14 @@ function renderSessionEditor(m, s) {
 // ---- Library tab ----
 function renderLibrary() {
   const el = $("sec-library");
+  if (!store.library.length) {
+    el.innerHTML = blank("📚", "The library is empty",
+      "Library timers are reusable definitions — a 10-minute presentation, a 3-minute check-in — " +
+      "that you can drop into any session. Editing a session's copy never changes the original.",
+      '<button class="btn primary" data-act="newLibTimer">+ New library timer</button>');
+    return;
+  }
   let h = '<div style="margin-bottom:14px"><button class="btn primary" data-act="newLibTimer">+ New library timer</button></div>';
-  if (!store.library.length) h += '<div class="card"><div class="sub">Library is empty.</div></div>';
   store.library.forEach(t => {
     h += '<div class="card"><div class="row1"><div><div class="ttl">'+esc(t.label)+'</div>' +
       '<div class="sub">' + fmt(t.durationMs) + ' · pre ' + t.preWarn.n + 's/' + SOUNDS[t.preWarn.sound] +
@@ -834,6 +1091,14 @@ function renderLibrary() {
 function renderHistory() {
   const el = $("sec-history");
   const hist = store.history;
+  if (!hist.length) {
+    el.innerHTML = blank("📈", "No runs recorded yet",
+      "Every timer you run writes a row here: planned versus actual, variance, and time spent paused. " +
+      "Drift then rolls up by timer label, by session, and by meeting — so you can see whether delays " +
+      "come from one person, one kind of session, or the meeting as a whole.",
+      '<button class="btn primary" data-act="doneToMeetings">Load a meeting and run it</button>');
+    return;
+  }
   const totalPaused = store.meetings.reduce((a,m)=>a+(m.pausedTotalMs||0),0);
   const totalVar = hist.reduce((a,r)=>a+r.varianceMs,0);
 
@@ -1087,6 +1352,24 @@ document.addEventListener("click", (e) => {
       run.index = 0; run.sessionUsed = {}; run.records = [];
       resetTimer(); showRun(); break; }
 
+    // --- data / backup ---
+    case "exportJSON": exportJSON(); break;
+    case "exportCSV": exportCSV(); break;
+    case "importJSON": $("importFile").click(); break;
+    case "reseedSample": {
+      const fresh = seed();
+      fresh.library.forEach(t => store.library.push(t));
+      fresh.meetings.forEach(m => store.meetings.push(m));
+      save(); loadMeetingIntoRun(store.meetings[store.meetings.length-1], false);
+      toast("Sample meeting added.");
+      if (document.body.classList.contains("managing")) renderManage(); else showRun();
+      break; }
+    case "factoryReset": {
+      if (!confirm("Erase all meetings, library timers and history in this browser, and start again from the sample?")) break;
+      if (!confirm("Last check — this cannot be undone. Continue?")) break;
+      store = seed(); save(); mountRenderer(); loadMeetingIntoRun(activeMeeting(), false);
+      toast("Everything erased and reseeded."); renderManage(); break; }
+
     // --- history ---
     case "clearHistory": { if (confirm("Clear all run history and reset paused totals?")) {
       store.history = []; store.meetings.forEach(m=>m.pausedTotalMs=0); save(); renderHistory(); } break; }
@@ -1133,6 +1416,35 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+$("importFile").addEventListener("change", (e) => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = "";                 // allow re-picking the same file
+  if (f) handleImportFile(f);
+});
+
+// ==========================================================================
+//  SERVICE WORKER (optional sidecar — absence is not an error)
+// ==========================================================================
+function registerSW() {
+  if (location.protocol === "file:" || !("serviceWorker" in navigator)) return;
+  navigator.serviceWorker.register("sw.js").then(reg => {
+    // A worker waiting to take over means a newer version is already cached.
+    const offerUpdate = (w) => toast("A new version is ready.", {
+      sticky: true, actionLabel: "Reload",
+      onAction: () => { w.postMessage("skipWaiting"); location.reload(); },
+    });
+    if (reg.waiting && navigator.serviceWorker.controller) offerUpdate(reg.waiting);
+    reg.addEventListener("updatefound", () => {
+      const w = reg.installing;
+      if (!w) return;
+      w.addEventListener("statechange", () => {
+        if (w.state === "installed" && navigator.serviceWorker.controller) offerUpdate(w);
+      });
+    });
+    reportSWState();
+  }).catch(() => { /* sidecar missing or blocked — app still works */ });
+}
+
 // ==========================================================================
 //  INIT
 // ==========================================================================
@@ -1141,6 +1453,7 @@ mountRenderer();
 loadMeetingIntoRun(activeMeeting(), false);
 showRun();
 requestAnimationFrame(loop);
+registerSW();
 </script>
 </body>
 </html>

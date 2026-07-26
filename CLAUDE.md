@@ -112,9 +112,16 @@ Ship the depletion bar now; add alternates as separate renderers later.
 
 ## Distribution
 
-- **One self-contained HTML file.** No build step, no framework, no npm
-  dependencies, no CDN links. The same file is both the download and the
-  hosted page.
+- **`index.html` is self-contained and must stay that way.** No build step, no
+  framework, no npm dependencies, no CDN links, no external images. Downloaded
+  on its own it is a complete, working app.
+- **Two optional sidecars enable offline:** `sw.js` and `manifest.webmanifest`.
+  A service worker cannot be inlined — browsers refuse to register one from a
+  blob or `data:` URL — so offline requires real files. Registration fails
+  silently when they are absent or when opened over `file://`, and the app
+  carries on. Icons are inlined as data URIs, so there are still no image files.
+- **Bump `VERSION` in `sw.js` on every deploy.** The page detects the waiting
+  worker and offers a Reload toast. Skip the bump and users keep the old cache.
 - **No backend, no accounts, no sign-in.** History lives in each browser's
   `localStorage`, so every user's data is private to them and invisible to
   everyone else.
@@ -151,7 +158,7 @@ short on time.
 ## Views
 
 - **Run** — the shared-display screen. The hero.
-- **Manage** (`S`) — meetings, timer library, history, display settings.
+- **Manage** (`S`) — meetings, timer library, history, display, data.
 - **Summary** — shown when `Finish` ends a meeting. Target / planned / actual /
   drift / paused tiles, then a per-session breakdown with buffer used-vs-left
   and per-timer variance. Exits to Manage → Meetings, or re-runs the meeting.
@@ -164,7 +171,8 @@ short on time.
       rolled up to meeting level, and the time-remaining graphic behind a
       **swappable renderer** (depletion bar + draining ring)
 - [x] Build 1a — end-of-meeting summary screen; recording fixes
-- [ ] Build 2 — PWA/offline, JSON export/import, CSV history, empty states
+- [x] Build 2 — PWA/offline (sw.js + manifest), JSON export/import with
+      merge-or-replace, CSV history export, empty states, update toast
 - [ ] Build 3 — GitHub Pages publish, then office server mirror
 - [ ] Later — richer end-of-timer graphics as alternate renderers
 
@@ -180,3 +188,9 @@ short on time.
 - 2026-07-26 — Fixed: recorded durations were roughly doubled, because the
   clock segment was closed and then counted again while the state was still
   `running`. Durations are now settled to a non-running state before recording.
+- 2026-07-26 — Owner chose two optional sidecar files (`sw.js`,
+  `manifest.webmanifest`) over dropping the service worker, resolving the
+  conflict between "one self-contained file" and "ships as a PWA".
+  `index.html` alone remains a fully working app.
+- 2026-07-26 — Import offers **Merge** (keeps existing, re-ids collisions,
+  dedupes history by row id) or **Replace all**. Merge is the safer default.
