@@ -3,7 +3,7 @@
    tells the page an update is ready. Nothing here is required for the app to
    run — index.html works standalone if this file is absent. */
 
-const VERSION = "forum-timer-v2.0.0";
+const VERSION = "forum-timer-v3.0.0";
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {

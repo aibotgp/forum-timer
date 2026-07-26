@@ -89,26 +89,46 @@ saved meeting therefore keeps accumulating history under the same names.
 The screen is a shared display everyone in the room can see, usually through a
 mediocre projector in a room of unpredictable brightness.
 
+The design system lives in `Design/FORUM-TIMER-DESIGN-SPEC.md`, with a visual
+reference at `Design/forum-timer-design-reference.html`. The spec's tokens are
+the source of truth; use CSS custom properties, never hard-coded colours.
+
+- Type: Caprasimo (display — screen titles, meeting and session names) over
+  Figtree (everything else). Both are OFL and inlined as base64 `@font-face`,
+  so there is still no CDN and no font files. Numerals always tabular.
 - Numerals are the hero: enormous, tabular, high contrast.
 - Transport controls stay visible at all times. Never hide them behind hover.
-- State is carried by colour across the whole field, not a small badge:
-  running (green) → pre-warning (amber) → overrun (red).
-- Keyboard first: space start/pause, R reset, E end, S setup.
+  Each button prints its own shortcut beside the label — no separate legend.
+- **Restraint rule.** Phase colour applies to the numerals and the depletion
+  graphic only. The background never floods. Overrun is the one place red may
+  also tint a chip. **Room mode** (Data → Appearance, off by default) overrides
+  this and floods the whole field, for a projector in a bright room.
+- Status copy is warm and one line, never a modal: "Running comfortably",
+  "Nearly there — 1:12 left", "You're 2:04 over — buffer covers it for now",
+  and once the pool is empty, "buffer is spent, the meeting has expanded".
+- Keyboard first: Space start/pause, R reset, E end, N next, S build, H home.
 - Must stay readable and usable from a laptop screen down to a projector.
 
 ### Time-remaining visualisation (swappable)
 
-The signature element is the **depletion bar**: it drains left-to-right while
-time remains, then refills from the right in red as overrun accumulates, so
+The signature element is the **Ribbon**: a pill track whose phase-coloured fill
+is anchored left and shrinks left-to-right as time drains, then a red fill grows
+from the right edge back toward the middle as overrun accumulates — so
 encroachment is visible from across the room.
 
-The depletion bar is the *default*, but it is not the only possible graphic.
-The time-remaining visual is built as a **swappable renderer** behind a stable
-interface: the engine hands the renderer the current phase and a
-remaining/overrun fraction each frame, and the renderer draws. This keeps the
-door open for richer, more engaging graphics later (a draining ring, a filling
-shape, something playful near the end) without touching the timing engine.
-Ship the depletion bar now; add alternates as separate renderers later.
+The graphic sits behind a **renderer registry** with a stable interface, so a
+new graphic is a new object and never an engine change:
+
+```js
+renderer.mount(rootEl);
+renderer.draw({ phase, remaining, overrun, color, reducedMotion });
+renderer.unmount();
+```
+
+Renderers never read app state — everything they need arrives in `draw()`.
+Three ship today: **Ribbon** (default), **Ring** (conic dial) and **Field**
+(a tint rising in a well). Richer, more playful graphics can be added later
+the same way.
 
 ## Distribution
 
@@ -157,11 +177,29 @@ short on time.
 
 ## Views
 
-- **Run** — the shared-display screen. The hero.
-- **Manage** (`S`) — meetings, timer library, history, display, data.
+- **Home** (`H`) — the landing screen. Meeting cards with target, planned and
+  last-run drift, plus recent activity. The app always starts here; it never
+  opens straight into a running meeting.
+- **Run** — the shared-display screen. The hero. Centred layout.
+- **Build** (`S`) — the board: a column per session, drag-and-drop for both
+  timer cards and whole columns, with ↑↓ buttons as a keyboard-accessible
+  fallback.
+- **Library** — reusable timer definitions as a card grid, with per-label run
+  stats and search.
+- **Alerts** — the per-timer editor: label, duration, and one row per alert.
+- **History** — four stat cards, drift-by-label bars, a twelve-meeting column
+  chart with drift above a hairline and paused time below, then the run log.
+- **Data** — backup, transfer, appearance, storage and offline state.
 - **Summary** — shown when `Finish` ends a meeting. Target / planned / actual /
   drift / paused tiles, then a per-session breakdown with buffer used-vs-left
   and per-timer variance. Exits to Manage → Meetings, or re-runs the meeting.
+
+## Rendering note
+
+The run view splits rendering deliberately: `renderRun()` rebuilds the chrome
+(transport, titles) only on a state change, while `paintRun()` runs every
+animation frame and touches text and graphics only. Rebuilding buttons per
+frame detaches them mid-click and destroys keyboard focus — do not merge these.
 
 ## Build status
 
@@ -173,8 +211,12 @@ short on time.
 - [x] Build 1a — end-of-meeting summary screen; recording fixes
 - [x] Build 2 — PWA/offline (sw.js + manifest), JSON export/import with
       merge-or-replace, CSV history export, empty states, update toast
+- [x] Design pass — spec tokens applied, Caprasimo + Figtree embedded, Home
+      screen with `H`, build board with drag-and-drop, Alerts editor, charted
+      history, light/dark themes, Room mode
 - [ ] Build 3 — GitHub Pages publish, then office server mirror
-- [ ] Later — richer end-of-timer graphics as alternate renderers
+- [ ] Later — richer end-of-timer graphics as alternate renderers; the Quiet
+      stage and Agenda split run layouts (a `layout` setting already exists)
 
 ## Decisions log
 
@@ -192,5 +234,15 @@ short on time.
   `manifest.webmanifest`) over dropping the service worker, resolving the
   conflict between "one self-contained file" and "ships as a PWA".
   `index.html` alone remains a fully working app.
+- 2026-07-26 — Design spec adopted. Its restraint rule supersedes the old
+  "colour floods the whole field" interface rule; the projector case is served
+  by Room mode instead, which is off by default.
+- 2026-07-26 — Fonts embedded as base64 rather than falling back to system-ui,
+  so the design's character survives offline with no CDN.
+- 2026-07-26 — The app lands on **Home**, never straight into a loaded meeting.
+  `H` returns there from anywhere.
+- 2026-07-26 — Meeting drift counts completed timers plus the live timer's
+  *overrun only*. Time the running timer has not used yet is not credit earned,
+  so drift no longer reads as a large negative at the start of a meeting.
 - 2026-07-26 — Import offers **Merge** (keeps existing, re-ids collisions,
   dedupes history by row id) or **Replace all**. Merge is the safer default.
