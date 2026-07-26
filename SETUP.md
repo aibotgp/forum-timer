@@ -201,9 +201,13 @@ upload misbehaves you can still download them from the run's summary page.
 If a job fails, open it and read the last red step — most first-run failures
 are a missing tag or a version already in use.
 
-**The builds are unsigned.** Recipients get one warning the first time:
-right-click → Open on macOS, More info → Run anyway on Windows. Signing them
-would need an Apple Developer account (US$99/year) and a Windows certificate.
+**Signing.** The Mac app is ad-hoc signed (free, no Apple account). That is
+what allows it to run on Apple Silicon at all — an unsigned binary is refused
+outright rather than merely warned about. It is not notarised, so recipients
+still right-click → Open once, and `xattr -cr "/Applications/Forum Timer.app"`
+clears it if macOS is stubborn. Windows is unsigned and shows SmartScreen once.
+Removing both prompts entirely needs an Apple Developer account (US$99/year)
+and a Windows certificate.
 
 ---
 

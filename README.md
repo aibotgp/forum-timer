@@ -104,13 +104,23 @@ with nothing to download.
 **Or download a desktop build.** Mac and Windows installers are on the
 [Releases page](https://github.com/aibotgp/forum-timer/releases/latest).
 
-These builds are not code-signed, so the first launch needs one extra step:
+These builds are not notarised, so the first launch needs one extra step:
 
 - **macOS** — open the `.dmg`, drag Forum Timer to Applications, then
-  right-click it in Applications and choose **Open**, and **Open** again. Once
-  only. Double-clicking the first time gives an "unidentified developer" error.
+  **right-click it in Applications and choose Open**, and Open again. Once only.
+  Double-clicking the first time will not work.
+
+  If macOS blocks it anyway or calls it damaged, clear the download flag once:
+
+  ```bash
+  xattr -cr "/Applications/Forum Timer.app"
+  ```
+
 - **Windows** — run the `.exe`. SmartScreen will say the publisher is unknown:
   click **More info**, then **Run anyway**. Once only.
+
+If you would rather not do any of that, use the web version and add it to your
+Dock or Start menu — it is the same application with no warnings at all.
 
 The desktop app stores its meetings and history separately from your browser's.
 Use **Data → Export backup** in one and import it in the other to move them.

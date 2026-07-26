@@ -295,6 +295,13 @@ identical to the hosted one.
   (pointless — the files are local), analytics never loads even if the user has
   opted in, and Data → Offline reports "built in" instead of a missing sw.js.
 - Desktop history is separate from browser history; export/import bridges them.
+- **macOS builds are ad-hoc signed** (`APPLE_SIGNING_IDENTITY: "-"`). This is not
+  cosmetic: Apple Silicon refuses to execute an unsigned binary at all, so
+  without it the app is killed on launch rather than showing the usual
+  "unidentified developer" prompt. It is not notarised — that needs a paid
+  Apple Developer account — so the first launch is still right-click → Open,
+  and `xattr -cr` clears a stubborn quarantine flag. A CI step verifies the
+  signature actually applied rather than assuming it.
 - Bump `version` in BOTH `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`
   when releasing, and use a tag that has not been used before.
 

@@ -1,7 +1,7 @@
 name: Build desktop apps
 
 # Produces the Mac and Windows installers and attaches them to a GitHub Release.
-# Run it by hand from the Actions tab, or push a tag like v3.2.2.
+# Run it by hand from the Actions tab, or push a tag like v3.2.3.
 #
 # Why three jobs rather than one matrix: if each matrix job creates the release
 # itself, the two run in parallel and race to create the same tag. One wins and
@@ -9,17 +9,19 @@ name: Build desktop apps
 # end up with only one platform's installer. So the release is created once,
 # both builders upload into that known release id, and it is published at the end.
 #
-# The builds are UNSIGNED. macOS shows "unidentified developer" and Windows
-# shows SmartScreen the first time — the release notes explain the one-off
-# workaround. Signing needs an Apple Developer account and a Windows certificate.
+# The macOS app is AD-HOC SIGNED (free, no Apple account). That is what lets it
+# run at all on Apple Silicon, which refuses to execute unsigned binaries. It is
+# NOT notarised, so users still confirm once via right-click -> Open. Windows is
+# unsigned and shows SmartScreen once. Removing both prompts entirely needs a
+# paid Apple Developer account and a Windows certificate.
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release tag (e.g. v3.2.2)'
+        description: 'Release tag (e.g. v3.2.3)'
         required: true
-        default: 'v3.2.2'
+        default: 'v3.2.3'
   push:
     tags:
       - 'v*'
@@ -56,10 +58,20 @@ jobs:
               'browser at https://aibotgp.github.io/forum-timer/ and keeps working offline',
               'once opened. Install one of these only if you would rather have an application.',
               '',
-              '**macOS** — open the `.dmg`, drag Forum Timer to Applications, then right-click',
-              'it in Applications and choose **Open**, and **Open** again. Once only; double-',
-              'clicking the first time gives an "unidentified developer" error because the app',
-              'is not code-signed.',
+              '**macOS** — open the `.dmg` and drag Forum Timer to Applications. Then, in',
+              'Applications, **right-click the app and choose Open**, and Open again at the',
+              'prompt. Once only. Double-clicking the first time will not work.',
+              '',
+              'If macOS says the app is damaged or blocks it outright, clear the download flag',
+              'once in Terminal:',
+              '',
+              '```',
+              'xattr -cr "/Applications/Forum Timer.app"',
+              '```',
+              '',
+              'That is needed because the app is signed but not notarised — notarising it',
+              'requires a paid Apple Developer account. If you would rather not do any of this,',
+              'just use the web version and add it to your Dock: it is the same app.',
               '',
               '**Windows** — run the `.exe` installer. SmartScreen will say the publisher is',
               'unknown: click **More info**, then **Run anyway**. Once only.',
@@ -132,9 +144,30 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Ad-hoc signing ("-"), which is free and needs no Apple account.
+          # Apple Silicon refuses to execute an unsigned binary at all, so
+          # without this the Mac app is killed outright rather than showing the
+          # usual "unidentified developer" prompt. This does NOT notarise it:
+          # users still confirm once via right-click -> Open.
+          APPLE_SIGNING_IDENTITY: ${{ matrix.platform == 'macos-latest' && '-' || '' }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           args: ${{ matrix.args }}
+
+      # Proves the signature actually got applied, rather than assuming it.
+      - name: Verify the macOS signature
+        if: matrix.platform == 'macos-latest'
+        shell: bash
+        run: |
+          APP=$(find src-tauri/target -name "Forum Timer.app" -maxdepth 6 -type d | head -1)
+          echo "app bundle: $APP"
+          if [ -z "$APP" ]; then echo "NO .app FOUND"; exit 0; fi
+          echo "--- codesign ---"
+          codesign -dv --verbose=4 "$APP" 2>&1 | head -20 || true
+          echo "--- signature validity ---"
+          codesign --verify --deep --strict --verbose=2 "$APP" 2>&1 | head -20 || true
+          echo "--- gatekeeper assessment (rejection here is expected: not notarised) ---"
+          spctl -a -vv "$APP" 2>&1 | head -10 || true
 
       # Diagnostics: if an installer ever fails to reach the release again,
       # this shows exactly what the build actually produced.
