@@ -173,7 +173,34 @@ Pages redeploys in a minute or two. Anyone with the app already open gets a
 
 ---
 
-## 7. Office server mirror — later
+## 7. Publishing the desktop apps
+
+The Mac and Windows installers are built by GitHub, not on your Mac — you
+cannot build a Windows `.exe` from macOS, and building either by hand needs a
+Rust toolchain you do not otherwise want.
+
+**To cut a release:**
+
+1. Push whatever you want released (section 6).
+2. On the repository: **Actions → Build desktop apps → Run workflow**.
+3. Leave the version as `v3.2.0` (or bump it if you have already used that tag)
+   and press **Run workflow**.
+4. It takes roughly 10–15 minutes. Two jobs run side by side, one on a Mac
+   runner and one on Windows.
+5. When both finish, the installers appear on the repository's **Releases**
+   page, and the "Mac & Windows downloads" button on the app's home screen
+   points at it automatically.
+
+If a job fails, open it and read the last red step — most first-run failures
+are a missing tag or a version already in use.
+
+**The builds are unsigned.** Recipients get one warning the first time:
+right-click → Open on macOS, More info → Run anyway on Windows. Signing them
+would need an Apple Developer account (US$99/year) and a Windows certificate.
+
+---
+
+## 8. Office server mirror — later
 
 Not set up yet. When you want it, the whole job is copying `index.html`,
 `sw.js` and `manifest.webmanifest` into whatever folder that machine serves as

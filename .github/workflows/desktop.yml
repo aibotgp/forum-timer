@@ -1,0 +1,97 @@
+name: Build desktop apps
+
+# Produces the Mac and Windows installers and attaches them to a GitHub Release.
+# Run it by hand from the Actions tab, or push a tag like v3.2.0.
+#
+# The builds are UNSIGNED. macOS shows "unidentified developer" and Windows
+# shows SmartScreen the first time — the Release notes tell people how to get
+# past it. Signing would need an Apple Developer account and a Windows
+# certificate; see SETUP.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag (e.g. v3.2.0)'
+        required: true
+        default: 'v3.2.0'
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: '--target universal-apple-darwin'
+            rust_targets: 'aarch64-apple-darwin,x86_64-apple-darwin'
+          - platform: windows-latest
+            args: ''
+            rust_targets: ''
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Tauri bundles a folder, not the repo. Copy in just the app so the
+      # installer doesn't carry the design files or git history.
+      - name: Stage the web app
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp index.html dist/index.html
+          cp manifest.webmanifest dist/manifest.webmanifest
+          ls -la dist
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_targets }}
+
+      - name: Cache cargo
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      # Generates every icon size/format Tauri needs from one source PNG,
+      # including the .icns and .ico that can't be produced on Linux.
+      - name: Generate app icons
+        run: npx --yes @tauri-apps/cli@^2 icon app-icon.png
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.event_name == 'push' && github.ref_name || inputs.version }}
+          releaseName: 'Forum Timer ${{ github.event_name == ''push'' && github.ref_name || inputs.version }}'
+          releaseBody: |
+            Desktop builds of Forum Timer. You do not need these to use the tool —
+            it runs in any browser at https://aibotgp.github.io/forum-timer/ and
+            works offline once opened. Install one of these if you would rather
+            have it as an application.
+
+            **macOS** — download the `.dmg`, open it, drag Forum Timer to
+            Applications. The first launch is blocked because the app is not
+            signed: right-click it in Applications and choose **Open**, then
+            **Open** again. You only do this once.
+
+            **Windows** — download the `.exe` installer and run it. Windows
+            SmartScreen will warn that the publisher is unknown: click
+            **More info**, then **Run anyway**. Once only.
+
+            Your meetings and history are stored on your own computer and are
+            separate from the browser version. Use **Data → Export backup** to
+            move them across.
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}

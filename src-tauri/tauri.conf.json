@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Forum Timer",
+  "version": "3.2.0",
+  "identifier": "io.github.aibotgp.forumtimer",
+  "build": {
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Forum Timer",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 880,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "Productivity",
+    "copyright": "Rohit Goyal, EO Pune (ICE Forum)",
+    "shortDescription": "A meeting timer that makes overrun visible to the whole room.",
+    "longDescription": "Forum Timer runs a meeting as sessions of timers. Nothing is ever truncated: at zero a timer holds and counts upward until a person ends it, drawing down that session's buffer first. History of planned against actual, drift and paused time is kept on this computer only."
+  }
+}

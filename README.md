@@ -66,18 +66,54 @@ accumulating history under the same names.
 
 ## Your data stays with you
 
-There is no backend and no account. Everything lives in your own browser's
-`localStorage`, which means your history is invisible to everyone else —
-including whoever published this page.
+There is no account and nothing to sign into. Your meetings, timers and history
+are saved only in your own browser's `localStorage`, on your own device. They
+are never uploaded. Nobody else can see them — not other people using this
+tool, and not the person who published this page.
 
-It also means it does not travel. Another browser, another Mac, or a private
-window all start empty. **Data → Export backup** writes a JSON file that
-restores everything, and history also exports as CSV for analysis elsewhere.
+The flip side is that they do not travel. Another browser, another computer, or
+a private window all start empty. **Data → Export backup** writes a JSON file
+that restores everything, and history also exports as CSV for analysis
+elsewhere. If you run the timer for your forum, keep that backup somewhere
+safe — a browser reset takes your history with it.
+
+### Optional, off by default: anonymous usage
+
+**Data → Privacy** has one switch, *Help improve this tool*. It is **off unless
+you turn it on**, and nothing is loaded or sent while it is off.
+
+If you switch it on, it records that a page was opened, how long it stayed
+open, and which features were used — the graphic you chose, whether room mode
+is on, whether a meeting was started or finished. It **never** sends your
+meeting names, timer labels, notes or timings. It sets no cookies and does not
+identify you. Measurement is by [Plausible](https://plausible.io), which stores
+no personal data and is EU-hosted.
+
+Switch it off and collection stops immediately. There is nothing to request or
+delete afterwards, because nothing about you was stored in the first place.
 
 ## Installing it
 
-Visit the link, then use your browser's install or **Add to Dock** option. It
-runs with no internet once installed. On macOS Safari: File → Add to Dock.
+You have two options, and neither is required — the link above works on its own
+and keeps working with no internet once you have opened it.
+
+**Add it from your browser.** In Safari, File → Add to Dock. In Chrome or Edge,
+click the install icon in the address bar. This gives you a real application
+with nothing to download.
+
+**Or download a desktop build.** Mac and Windows installers are on the
+[Releases page](https://github.com/aibotgp/forum-timer/releases/latest).
+
+These builds are not code-signed, so the first launch needs one extra step:
+
+- **macOS** — open the `.dmg`, drag Forum Timer to Applications, then
+  right-click it in Applications and choose **Open**, and **Open** again. Once
+  only. Double-clicking the first time gives an "unidentified developer" error.
+- **Windows** — run the `.exe`. SmartScreen will say the publisher is unknown:
+  click **More info**, then **Run anyway**. Once only.
+
+The desktop app stores its meetings and history separately from your browser's.
+Use **Data → Export backup** in one and import it in the other to move them.
 
 ## For anyone reading the source
 
@@ -110,6 +146,10 @@ engine change.
 Bump `VERSION` in `sw.js` whenever you deploy. The running app notices the
 waiting worker and offers a Reload. Skip the bump and people keep the old
 cached copy.
+
+## Credit
+
+Built by **Rohit Goyal**, EO Pune — a member of the ICE Forum.
 
 ## Licences
 

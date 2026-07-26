@@ -218,11 +218,94 @@ frame detaches them mid-click and destroys keyboard focus — do not merge these
 - [x] Design pass — spec tokens applied, Caprasimo + Figtree embedded, Home
       screen with `H`, build board with drag-and-drop, Alerts editor, charted
       history, light/dark themes, Room mode
-- [~] Build 3 — repo prepared for publishing (README, .gitignore, .nojekyll,
-      font licences, subpath hosting verified). Publish steps in `SETUP.md` §5,
-      awaiting the GitHub push. Office server mirror still to do.
+- [x] Build 3 — published. Live at https://aibotgp.github.io/forum-timer/ from
+      the public repo `aibotgp/forum-timer`, verified end to end in a real
+      browser: HTTPS, correct MIME types, service worker registered at the
+      `/forum-timer/` scope, all four assets cached, fonts and tokens rendering.
+- [x] Build 4 — credit line (Home + Data only), privacy notice explaining
+      local-only storage, and opt-in anonymous analytics (Plausible), off by
+      default and never loaded on http, localhost, file:// or the desktop app
+- [x] Build 5 — desktop installers: Tauri wrapper in `src-tauri/`, built by
+      `.github/workflows/desktop.yml` on macOS and Windows runners, unsigned,
+      attached to a GitHub Release. Home links to the Releases page.
+- [x] Build 6 — EO Forum template built in (11 sessions), session library with
+      copy-on-add, Library split into Timers | Sessions, always-visible reorder
+      controls, explicit session drag handles
+- [ ] Build 3b — office server mirror (copy the three app files into whatever
+      folder that machine serves; must be http(s), not file://)
 - [ ] Later — richer end-of-timer graphics as alternate renderers; the Quiet
       stage and Agenda split run layouts (a `layout` setting already exists)
+
+## Live deployment
+
+- Repo: `aibotgp/forum-timer` (public). Site: https://aibotgp.github.io/forum-timer/
+- GitHub Pages, deploy from branch `main`, folder `/ (root)`.
+- Git identity on the MacBook uses the GitHub noreply address, so the owner's
+  real email stays out of public commit metadata.
+- Auth is a classic PAT with `repo` scope, stored in the macOS Keychain via
+  `credential.helper osxkeychain`. It expires — a push failing with
+  "Invalid username or token" means generate a new one, not a broken repo.
+
+## The EO Forum template
+
+Encoded in the `EO` constant, not in storage, so it survives a factory reset and
+can be re-added from Home at any time. Conversions applied when it was written:
+
+- The flow's "Warning at X mins" means X minutes **elapsed**, so it is stored as
+  a pre-warning of (duration − X). Do not reinterpret this as time remaining.
+- Deep Dive, Learning Session and Impromptu Deep Dive are **alternatives**, one
+  per meeting. All eleven sessions live in the session library; the shipped
+  meeting uses Deep Dive and runs 160 min of timers plus a 25 min buffer pool
+  against a 180 min target.
+- Timers are the source of truth for a session's length. The flow's stated
+  session durations disagreed with their own timers in two places (Brain
+  Storming 30 vs 31, Impromptu Deep Dive 75 vs 47) and are not encoded.
+- The two IDD one-word timers were written as "warning at 2" on a 2-minute
+  timer, which would fire the warning on the chime; they warn at 1 minute.
+- Overrun repeats as often as every 5 seconds, so the template uses the short
+  `beep` rather than the three-tone `alarm`.
+- The eight member slots stay in the "5% Reflections" session where they are
+  renamed; the timer library carries one representative "Member Reflection".
+
+**Dragging.** Timer cards are draggable; sessions are dragged **only** by the
+`⠿` handle in the column header. The column itself must not be draggable —
+when it was, a drag beginning on any always-visible button inside a card was
+escalated by the browser to the nearest draggable ancestor and silently moved
+the whole session.
+
+## Desktop builds
+
+`src-tauri/` wraps the same `index.html` in a system webview. There are no
+commands, no plugins and no IPC — the desktop build must stay behaviourally
+identical to the hosted one.
+
+- CI stages `index.html` into `dist/` first; Tauri bundles that folder, so the
+  installer never carries `Design/` or git history.
+- Icons are generated in CI from `app-icon.png` by `tauri icon`, because the
+  `.icns` and `.ico` formats cannot be produced on the Linux build box.
+- `isDesktop()` gates three things: the service worker is not registered
+  (pointless — the files are local), analytics never loads even if the user has
+  opted in, and Data → Offline reports "built in" instead of a missing sw.js.
+- Desktop history is separate from browser history; export/import bridges them.
+- Bump `version` in BOTH `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`
+  when releasing, and use a tag that has not been used before.
+
+## Analytics — the rules that make it lawful
+
+Nothing loads and nothing is sent unless the user turns on *Help improve this
+tool* in Data → Privacy. That switch is **off by default** and that is the
+whole basis of compliance under GDPR and the DPDP Act — an opt-in needs no
+consent banner. Do not flip the default, do not pre-tick it, and do not load
+the script "just to check availability".
+
+- Never send meeting names, timer labels, notes or timings. Event props carry
+  only enum-ish values (which graphic, room mode on/off, a count).
+- The gate also blocks http, localhost, `file://` and the desktop webview, so
+  local testing never pollutes real numbers.
+- Switching off reloads the page, because a loaded script cannot be unloaded.
+- The README documents exactly this. If the collection changes, the README
+  changes in the same commit — the tool must never claim more privacy than it
+  delivers.
 
 ## Decisions log
 
@@ -255,5 +338,14 @@ frame detaches them mid-click and destroys keyboard focus — do not merge these
   browser. `Design/` stays tracked.
 - 2026-07-26 — Embedded fonts are SIL OFL, which requires the notice to travel
   with them: `FONT-LICENSES.txt` must not be deleted or excluded from the repo.
+- 2026-07-26 — Forum history stays local per browser; the eight ICE Forum
+  members are not getting a shared server-side view. Export/import is the
+  transfer mechanism. This preserves "no backend, no accounts, no sign-in".
+- 2026-07-26 — Usage analytics: Plausible hosted, opt-in only, default off.
+- 2026-07-26 — Desktop installers to be Tauri, unsigned, built by GitHub
+  Actions and distributed from the Releases page (WhatsApp blocks executables,
+  so the link is shared, not the file).
+- 2026-07-26 — Credit line: "Forum Timer — by Rohit Goyal, EO Pune (ICE Forum)",
+  on Home and Data only. The Run screen is projected and stays clean.
 - 2026-07-26 — Import offers **Merge** (keeps existing, re-ids collisions,
   dedupes history by row id) or **Replace all**. Merge is the safer default.

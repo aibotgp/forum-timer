@@ -98,6 +98,7 @@ nav.main button.on{color:var(--ink);border-bottom-color:var(--accent)}
 .pill.tint-go{background:color-mix(in srgb,var(--go) 20%,transparent);color:var(--go)}
 .pill.tint-warn .k,.pill.tint-over .k,.pill.tint-go .k{color:inherit;opacity:.8}
 
+a.btn{text-decoration:none;display:inline-block}
 .btn{border-radius:var(--rp);padding:9px 18px;font-weight:600;font-size:14.5px;
   background:var(--surface);color:var(--ink);border:1px solid transparent;transition:background var(--t)}
 .btn:hover{background:var(--raise)}
@@ -175,6 +176,13 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .stat .s{font-size:13px;color:var(--ink2)}
 .dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:0 0 auto}
 .panel-h{font-family:var(--body);font-weight:700;font-size:19px}
+.subtabs{display:inline-flex;gap:4px;background:var(--surface);border-radius:var(--rp);padding:4px;margin-bottom:var(--s4)}
+.subtabs button{padding:7px 16px;border-radius:var(--rp);font-size:14px;font-weight:600;color:var(--ink2)}
+.subtabs button.on{background:var(--bg);color:var(--ink)}
+.sesscard{background:var(--surface);border-radius:var(--r3);padding:var(--s4) var(--s5);margin-bottom:var(--s3)}
+.sesscard .hd{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s3);flex-wrap:wrap}
+.sesscard .tlist{margin-top:var(--s3);border-top:1px solid var(--line);padding-top:var(--s3)}
+.sesscard .tlist .tcard{background:var(--raise)}
 
 /* ---------- build board ---------- */
 .board{display:flex;gap:var(--s3);overflow-x:auto;padding-bottom:var(--s4);align-items:flex-start}
@@ -185,10 +193,12 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
   background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
 .col-h{display:flex;align-items:center;gap:8px;justify-content:space-between}
 .col-h .nm{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px}
+.colgrab{color:var(--ink2);cursor:grab;font-size:14px;line-height:1;padding:2px 4px;border-radius:6px}
+.colgrab:hover{background:var(--raise);color:var(--ink)}
 .col-sub{color:var(--ink2);font-size:12.5px;margin:4px 0 var(--s3)}
 .col-sub button{font-size:12.5px}
 .tcard{background:var(--raise);border-radius:var(--r2);padding:12px 14px;margin-bottom:var(--s2);
-  display:flex;align-items:center;gap:10px;position:relative}
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;position:relative}
 .tcard[draggable="true"]{cursor:grab}
 .tcard.done{opacity:.6}
 .tcard.now{box-shadow:0 6px 18px rgba(0,0,0,.18);transform:rotate(.6deg)}
@@ -196,11 +206,14 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .tcard .body{flex:1 1 auto;min-width:0}
 .tcard .lab{font-weight:600;font-size:14.5px;display:block;overflow:hidden;text-overflow:ellipsis}
 .tcard .sub{font-size:12px;color:var(--ink2);display:block}
-.tcard .dur{font-variant-numeric:tabular-nums;font-weight:600;font-size:14.5px}
-.tcard .mv{display:flex;gap:2px;opacity:0;transition:opacity var(--t);position:absolute;right:58px;top:50%;transform:translateY(-50%);background:var(--raise);box-shadow:-8px 0 8px var(--raise);border-radius:8px;z-index:2}
-.tcard:hover .mv,.tcard:focus-within .mv{opacity:1}
-.tcard .mv button{font-size:12px;color:var(--ink2);padding:2px 5px;border-radius:6px}
-.tcard .mv button:hover{background:var(--surface);color:var(--ink)}
+.tcard .dur{font-variant-numeric:tabular-nums;font-weight:600;font-size:14.5px;margin-left:auto}
+.tcard .mv{display:flex;gap:3px;order:9;justify-content:flex-end}
+.col .tcard .mv{flex-basis:100%}   /* narrow column: drop to its own row so the
+                                       drag point is never over a button */
+.tcard .mv button{font-size:12.5px;color:var(--ink2);padding:3px 6px;border-radius:6px;background:var(--surface);line-height:1}
+.tcard .mv button:hover{background:var(--bg);color:var(--ink)}
+.tcard .mv button:disabled{opacity:.3;cursor:default}
+.tcard .mv button:disabled:hover{background:var(--surface)}
 .dashed{border:1.5px dashed var(--line);border-radius:var(--r2);padding:12px;width:100%;
   color:var(--ink2);font-size:14px;text-align:center}
 .dashed:hover{border-color:var(--accent);color:var(--ink)}
@@ -261,6 +274,11 @@ input[type=text]:focus,input[type=number]:focus,select:focus{border-color:var(--
 .kv{display:grid;grid-template-columns:auto 1fr;gap:7px 22px;font-size:14px}
 .kv dt{color:var(--ink2)}
 .kv dd{font-variant-numeric:tabular-nums}
+.credit{margin-top:var(--s6);padding-top:var(--s4);border-top:1px solid var(--line);
+  text-align:center;font-size:12.5px;color:var(--ink2);line-height:1.7}
+.credit .who{font-family:var(--display);font-size:13.5px;color:var(--ink)}
+.switch{display:flex;align-items:center;gap:12px;cursor:pointer}
+.switch input{width:auto;margin:0}
 
 @media (prefers-reduced-motion:reduce){
   *,.ribbon .fill,.ribbon .ovr,.fieldwrap .lvl,.toast{transition:none !important}
@@ -325,7 +343,55 @@ input[type=text]:focus,input[type=number]:focus,select:focus{border-color:var(--
    All time is computed from Date.now() deltas, never by counting ticks.
    ========================================================================== */
 
-const APP_VERSION = "3.0.0";
+const APP_VERSION = "3.2.0";
+
+/* Credit line — shown on Home and Data only. The Run screen is projected in
+   front of a room and stays free of it. */
+const CREDIT = 'Forum Timer — by <span class="who">Rohit Goyal</span>, EO Pune (ICE Forum)';
+const creditBlock = () => '<div class="credit">' + CREDIT + '</div>';
+
+/* ==========================================================================
+   OPT-IN ANALYTICS
+   Nothing loads and nothing is sent unless the user switches this on in
+   Data → Privacy. It is off by default, which is what makes it lawful under
+   GDPR and the DPDP Act without a consent banner. Never runs on file:// or
+   inside the desktop app.
+   ========================================================================== */
+const ANALYTICS_DOMAIN = "aibotgp.github.io";
+const RELEASES_URL = "https://github.com/aibotgp/forum-timer/releases/latest";
+
+/* Running inside the Tauri desktop wrapper rather than a browser tab. */
+const isDesktop = () =>
+  !!(window.__TAURI_INTERNALS__ || window.__TAURI__) ||
+  location.protocol === "tauri:" ||
+  /(^|\.)tauri\.localhost$/.test(location.hostname);
+let analyticsLoaded = false;
+// https only, and never from a local dev server or the desktop app — local
+// testing must not pollute real numbers.
+const analyticsAllowedHere = () =>
+  location.protocol === "https:" &&
+  !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) &&
+  !/\.localhost$/.test(location.hostname) &&
+  !isDesktop();
+const analyticsOn = () => !!(store && store.settings && store.settings.analytics);
+
+function loadAnalytics(){
+  if (analyticsLoaded || !analyticsOn() || !analyticsAllowedHere()) return;
+  window.plausible = window.plausible || function(){
+    (window.plausible.q = window.plausible.q || []).push(arguments);
+  };
+  const s = document.createElement("script");
+  s.defer = true;
+  s.setAttribute("data-domain", ANALYTICS_DOMAIN);
+  s.src = "https://plausible.io/js/script.js";
+  s.onerror = () => { analyticsLoaded = false; };   // offline or blocked — carry on
+  document.head.append(s);
+  analyticsLoaded = true;
+}
+function track(name, props){
+  if (!analyticsOn() || !analyticsLoaded) return;
+  try { window.plausible(name, props ? { props } : undefined); } catch(e){}
+}
 const $ = (id) => document.getElementById(id);
 const uid = () => "id" + Date.now().toString(36) + Math.floor(Math.random()*1e6).toString(36);
 const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
@@ -420,31 +486,123 @@ const newMeeting = (title) => ({ id:uid(), title:title||"Meeting", targetTotalMs
   pausedTotalMs:0, notes:"", sessions:[] });
 const recomputeSessionPlanned = (s) => { s.plannedMs = s.timers.reduce((a,t)=>a+t.durationMs,0); };
 const sessionPool = (s) => (s.bufferBeforeMs||0) + (s.bufferAfterMs||0);
+// Adding a library session copies it — the meeting gets an independent
+// snapshot, so editing either side never rewrites the other.
+function cloneSession(s){
+  const c = { id:uid(), title:s.title, plannedMs:s.plannedMs,
+    bufferBeforeMs:s.bufferBeforeMs||0, bufferAfterMs:s.bufferAfterMs||0,
+    timers:s.timers.map(cloneTimer) };
+  recomputeSessionPlanned(c); return c;
+}
+
+/* ==========================================================================
+   EO FORUM TEMPLATE
+   Timer tuples: [label, durationMin, warnAtMin, overrunEverySec]
+   "warnAtMin" is minutes ELAPSED, as written in the owner's flow, so the
+   pre-warning is stored as (duration − warnAt). Timers are the source of
+   truth for a session's planned length; the stated session durations in the
+   original flow were informational and two of them disagreed with their own
+   timers, so those are not encoded.
+   ========================================================================== */
+const EO = {
+  meetingTitle: "EO Forum Meeting",
+  targetMin: 180,
+  // Deep Dive, Learning Session and Impromptu Deep Dive are alternatives —
+  // one per meeting. The shipped meeting uses Deep Dive.
+  defaultSessions: ["Pre-meeting","Opening Rituals","5% Reflections","Break",
+                    "Deep Dive","Housekeeping","Closing Rituals"],
+  sessions: [
+    { title:"Pre-meeting", before:1, after:2, timers:[
+      ["Meet & Greet", 10, 8, 5] ]},
+    { title:"Opening Rituals", before:1, after:2, timers:[
+      ["Time Check and Agenda Run Through", 5, 3, 5],
+      ["Confidentiality Reminder & Electronics Off", 2, 1, 5],
+      ["Meditation", 5, 4, 5],
+      ["One Word Opening", 3, 2, 5] ]},
+    { title:"5% Reflections", before:1, after:5, timers:[
+      ["Member1_Name", 5, 4, 5], ["Member2_Name", 5, 4, 5],
+      ["Member3_Name", 5, 4, 5], ["Member4_Name", 5, 4, 5],
+      ["Member5_Name", 5, 4, 5], ["Member6_Name", 5, 4, 5],
+      ["Member7_Name", 5, 4, 5], ["Member8_Name", 5, 4, 5],
+      ["Parking Lot", 5, 4, 5] ]},
+    { title:"Break", before:1, after:1, timers:[
+      ["Break Time", 10, 8, 5] ]},
+    { title:"Deep Dive", before:1, after:5, timers:[
+      ["Deep Dive - Opening", 2, 1, 5],
+      ["Deep Dive - Coach's Intro", 4, 3, 5],
+      ["Deep Dive - Presenter", 15, 13, 15],
+      ["Deep Dive - Silent Reflection", 5, 4, 5],
+      ["Deep Dive - Resonant Share", 25, 20, 15],
+      ["Deep Dive - Take Home", 7, 5, 5],
+      ["Deep Dive - One Word Close", 2, 1, 5] ]},
+    { title:"Brain Storming", before:1, after:5, timers:[
+      ["Brainstorming - Topic Introduction", 3, 2, 5],
+      ["Brainstorming - Discussion", 20, 15, 10],
+      ["Brainstorming - Take home", 8, 6, 5] ]},
+    { title:"Learning Session", before:1, after:5, timers:[
+      ["Learning - Introduction & Set-up", 10, 8, 5],
+      ["Learning - Talk", 60, 50, 15],
+      ["Learning - Close", 5, 4, 5] ]},
+    // The two one-word timers were written as "warning at 2" on a 2-minute
+    // timer, which would fire the warning exactly on the chime; set to 1.
+    { title:"Impromptu Deep Dive", before:1, after:5, timers:[
+      ["IDD - One Word Open", 2, 1, 5],
+      ["IDD - Presenter & Coach", 15, 12, 10],
+      ["IDD - Silent Reflection", 3, 2, 5],
+      ["IDD - Resonant Share", 20, 15, 15],
+      ["IDD - Take home Value", 5, 4, 10],
+      ["IDD - One Word Close", 2, 1, 5] ]},
+    { title:"Housekeeping", before:1, after:2, timers:[
+      ["Housekeeping", 15, 12, 5] ]},
+    { title:"Closing Rituals", before:1, after:1, timers:[
+      ["Closing", 5, 4, 5] ]},
+  ],
+};
+
+function templateTimer(tuple){
+  const [label, durMin, warnAtMin, overrunSec] = tuple;
+  const t = newTimer(label, durMin, 0);
+  t.preWarn = { n: Math.max(1, Math.round((durMin - warnAtMin) * 60)), sound:"soft" };
+  t.timeUp  = { sound:"bell" };
+  // A single short beep, because these repeat as often as every 5 seconds.
+  t.overrun = { n: overrunSec, sound:"beep" };
+  return t;
+}
+function templateSession(def){
+  const s = newSession(def.title);
+  s.bufferBeforeMs = (def.before||0) * 60000;
+  s.bufferAfterMs  = (def.after||0)  * 60000;
+  s.timers = def.timers.map(templateTimer);
+  recomputeSessionPlanned(s);
+  return s;
+}
+function buildEOSessions(){ return EO.sessions.map(templateSession); }
+function buildEOMeeting(){
+  const m = newMeeting(EO.meetingTitle);
+  m.targetTotalMs = EO.targetMin * 60000;
+  m.sessions = EO.defaultSessions.map(title =>
+    templateSession(EO.sessions.find(s => s.title === title)));
+  return m;
+}
+/* One representative of each distinct timer shape for the timer library.
+   The eight member slots collapse to one entry — rename them inside the
+   "5% Reflections" session, where the eight of them actually live. */
+function buildEOTimerLibrary(){
+  const seen = new Set(), out = [];
+  EO.sessions.forEach(s => s.timers.forEach(tp => {
+    const label = /^Member\d_Name$/.test(tp[0]) ? "Member Reflection (5%)" : tp[0];
+    if (seen.has(label)) return;
+    seen.add(label);
+    const t = templateTimer(tp); t.label = label; out.push(t);
+  }));
+  return out;
+}
 
 function seed(){
-  const lib = [ newTimer("Business Update",10,0), newTimer("Feedback Round",10,0),
-    newTimer("Welcome & intention",5,0), newTimer("Housekeeping",10,0),
-    newTimer("Coffee",10,0), newTimer("Deep Dive",45,0) ];
-  lib[2].preWarn = {n:60,sound:"soft"};  lib[2].overrun = {n:30,sound:"none"};
-  lib[4].preWarn = {n:60,sound:"none"};  lib[4].overrun = {n:60,sound:"none"};
-
-  const m = newMeeting("EO Forum — Monthly");
-  m.targetTotalMs = 180*60*1000;
-  const s1 = newSession("Opening");
-  s1.bufferBeforeMs = 2*60*1000; s1.bufferAfterMs = 2*60*1000;
-  s1.timers = [cloneTimer(lib[2]), cloneTimer(lib[3])];
-  const s2 = newSession("Member Update");
-  s2.bufferAfterMs = 10*60*1000;
-  s2.timers = [cloneTimer(lib[0]), cloneTimer(lib[0]), cloneTimer(lib[1])];
-  s2.timers[0].label = "Sara — Business Update";
-  s2.timers[1].label = "Marcus — Business Update";
-  s2.timers[2].label = "Kate — Feedback Round";
-  const s3 = newSession("Break");
-  s3.timers = [cloneTimer(lib[4])];
-  m.sessions = [s1,s2,s3]; m.sessions.forEach(recomputeSessionPlanned);
-  return { version:2, library:lib, meetings:[m], history:[],
-           settings:{rendererId:"ribbon", activeMeetingId:m.id, theme:"auto",
-                     roomMode:false, layout:"centred"} };
+  return { version:3, library:buildEOTimerLibrary(), sessionLibrary:buildEOSessions(),
+           meetings:[buildEOMeeting()], history:[],
+           settings:{rendererId:"ribbon", activeMeetingId:null, theme:"auto",
+                     roomMode:false, layout:"centred", analytics:false} };
 }
 function migrate(s){
   s.settings = s.settings || {};
@@ -453,7 +611,12 @@ function migrate(s){
   if (!s.settings.theme) s.settings.theme = "auto";
   if (typeof s.settings.roomMode !== "boolean") s.settings.roomMode = false;
   if (!s.settings.layout) s.settings.layout = "centred";
+  if (typeof s.settings.analytics !== "boolean") s.settings.analytics = false;  // opt-in only
   s.library  = Array.isArray(s.library)  ? s.library  : [];
+  s.sessionLibrary = Array.isArray(s.sessionLibrary) ? s.sessionLibrary : [];
+  s.sessionLibrary.forEach(x => { x.timers = Array.isArray(x.timers) ? x.timers : [];
+    x.bufferBeforeMs = x.bufferBeforeMs||0; x.bufferAfterMs = x.bufferAfterMs||0;
+    recomputeSessionPlanned(x); });
   s.meetings = Array.isArray(s.meetings) ? s.meetings : [];
   s.history  = Array.isArray(s.history)  ? s.history  : [];
   s.meetings.forEach(m => {
@@ -463,7 +626,7 @@ function migrate(s){
   });
   // rows written before runIds existed: group by meeting + calendar day
   s.history.forEach(r => { if (!r.runId) r.runId = (r.meetingId||"m") + "|" + String(r.date).slice(0,10); });
-  s.version = 2;
+  s.version = 3;
   return s;
 }
 function load(){
@@ -474,7 +637,7 @@ function load(){
 const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch(e){} };
 
 const findMeeting = (id) => store.meetings.find(m => m.id === id);
-const activeMeeting = () => findMeeting(store.settings.activeMeetingId) || null;
+const activeMeeting = () => findMeeting(store.settings.activeMeetingId) || store.meetings[0] || null;
 function findSessionOf(id){ for (const m of store.meetings){ const s = m.sessions.find(x=>x.id===id); if (s) return {m,s}; } return null; }
 function findTimerOf(id){ for (const m of store.meetings) for (const s of m.sessions){ const t = s.timers.find(x=>x.id===id); if (t) return {m,s,t}; } return null; }
 const meetingPlanned = (m) => m.sessions.reduce((a,s)=>a+s.plannedMs,0);
@@ -548,7 +711,7 @@ function nextTimer(){
   const wasIdle = run.state === "idle";
   settle(); if (!wasIdle) recordRun();
   if (!isLastStep()){ run.index++; resetTimer(); renderRun(); }
-  else { run.state = "ended"; go("summary"); }
+  else { run.state = "ended"; track("Meeting finished", { timers: String(run.records.length) }); go("summary"); }
 }
 function checkAlerts(elapsed){
   const t = curTimer(); if (!t || run.state !== "running") return;
@@ -642,6 +805,29 @@ function renderTopMeta(){
 /* ==========================================================================
    HOME
    ========================================================================== */
+function downloadCard(){
+  if (isDesktop()) return '';        // already installed — nothing to offer
+  return '<div class="card" style="margin-bottom:var(--s5)">' +
+    '<div class="kicker" style="margin-bottom:var(--s3)">USE IT ANYWHERE</div>' +
+    '<div class="row-between" style="align-items:center">' +
+      '<div style="max-width:62ch"><div style="font-weight:700;font-size:17px">Install it as an app</div>' +
+      '<div class="muted" style="font-size:13.5px">This page already works offline once opened, and your ' +
+      'browser can add it to the Dock or Start menu. If you would rather have a proper application, there ' +
+      'are Mac and Windows downloads. Either way your history stays on your own computer.</div></div>' +
+      '<a class="btn" href="' + RELEASES_URL + '" target="_blank" rel="noopener">Mac &amp; Windows downloads</a>' +
+    '</div></div>';
+}
+function templateCard(){
+  return '<div class="card" style="margin-bottom:var(--s5)">' +
+    '<div class="kicker" style="margin-bottom:var(--s3)">TEMPLATES</div>' +
+    '<div class="row-between" style="align-items:center">' +
+      '<div><div style="font-weight:700;font-size:17px">EO Forum Meeting</div>' +
+      '<div class="muted" style="font-size:13.5px">' + EO.defaultSessions.length + ' sessions · ' +
+      'target ' + fmt(EO.targetMin*60000) + ' · Deep Dive by default. Swap in Learning Session or ' +
+      'Impromptu Deep Dive from the session library.</div></div>' +
+      '<button class="btn" data-act="addEOTemplate">Add to my meetings</button>' +
+    '</div></div>';
+}
 function runsOf(meetingId){
   const by = {};
   store.history.filter(r => r.meetingId === meetingId).forEach(r => (by[r.runId] = by[r.runId]||[]).push(r));
@@ -657,8 +843,9 @@ function renderHome(){
     el.innerHTML = h + '<div class="blank"><h3>No meetings yet</h3>' +
       '<p>A meeting holds sessions, and each session holds timers. Start from the sample to see the shape, ' +
       'or build one from scratch.</p><div class="acts">' +
-      '<button class="btn primary" data-act="newMeeting">New meeting</button>' +
-      '<button class="btn" data-act="reseedSample">Add sample meeting</button></div></div>';
+      '<button class="btn primary" data-act="addEOTemplate">Start from the EO Forum template</button>' +
+      '<button class="btn" data-act="newMeeting">Blank meeting</button></div></div>' +
+      creditBlock();
     return;
   }
 
@@ -687,8 +874,11 @@ function renderHome(){
 
   h += '<div class="inline" style="margin-bottom:var(--s5)">' +
     '<button class="btn" data-act="newMeeting">+ New meeting</button>' +
-    '<button class="btn ghost" data-go="library">Timer library</button>' +
+    '<button class="btn ghost" data-go="library">Library</button>' +
     '<button class="btn ghost" data-go="history">History</button></div>';
+
+  h += templateCard();
+  h += downloadCard();
 
   const recent = store.history.slice(-6).reverse();
   h += '<div class="card"><div class="kicker" style="margin-bottom:var(--s3)">RECENT ACTIVITY</div>';
@@ -704,7 +894,7 @@ function renderHome(){
     });
     h += '</tbody></table>';
   }
-  el.innerHTML = h + '</div>';
+  el.innerHTML = h + '</div>' + creditBlock();
 }
 
 /* ==========================================================================
@@ -845,15 +1035,18 @@ function renderBuild(){
   m.sessions.forEach((s, si) => {
     const isActive = curSession() && curSession().id === s.id;
     const pool = sessionPool(s), used = run.sessionUsed[s.id]||0;
-    h += '<div class="col'+(isActive?" active":"")+'" data-col="'+s.id+'" draggable="true">' +
-      '<div class="col-h"><div class="nm"><span class="dot" style="background:'+(isActive?"var(--warn)":"var(--go)")+'"></span>' +
+    h += '<div class="col'+(isActive?" active":"")+'" data-col="'+s.id+'">' +
+      '<div class="col-h"><div class="nm">' +
+        '<span class="colgrab" draggable="true" data-colgrab="'+s.id+'" title="Drag to reorder this session">⠿</span>' +
+        '<span class="dot" style="background:'+(isActive?"var(--warn)":"var(--go)")+'"></span>' +
         esc(s.title) + '</div><div class="num muted">' + fmt(s.plannedMs) + '</div></div>' +
       '<div class="col-sub">' +
         (pool ? "Buffer " + fmt(pool) + " · " + fmt(Math.max(0,pool-used)) + " remaining" : "No buffer") +
         ' · <button data-act="editSessionProps" data-id="'+s.id+'" style="color:var(--accent)">edit</button>' +
         ' <button data-act="dupSession" data-id="'+s.id+'" style="color:var(--ink2)">dup</button>' +
+        ' <button data-act="saveSessionToLib" data-id="'+s.id+'" style="color:var(--ink2)">→ library</button>' +
         ' <button data-act="delSession" data-id="'+s.id+'" style="color:var(--over)">del</button></div>';
-    s.timers.forEach(t => {
+    s.timers.forEach((t, ti) => {
       const rec = run.records.find(r => r.timerId === t.id);
       const isNow = isActive && curTimer() && curTimer().id === t.id;
       const sub = rec ? "ran " + fmtSigned(rec.varianceMs)
@@ -862,11 +1055,9 @@ function renderBuild(){
       h += '<div class="tcard'+(rec?" done":"")+(isNow?" now":"")+'" draggable="true" data-card="'+t.id+'">' +
         '<span class="grab">⠿</span>' +
         '<span class="body"><span class="lab">' + esc(t.label) + '</span><span class="sub">' + sub + '</span></span>' +
-        '<span class="mv">' +
-          '<button data-act="moveTimer" data-id="'+t.id+'" data-dir="-1" title="Move up">↑</button>' +
-          '<button data-act="moveTimer" data-id="'+t.id+'" data-dir="1" title="Move down">↓</button>' +
+        moveBtns(t.id, "moveTimer", ti===0, ti===s.timers.length-1,
           '<button data-act="editTimer" data-id="'+t.id+'" title="Edit alerts">✎</button>' +
-          '<button data-act="delTimer" data-id="'+t.id+'" title="Delete">✕</button></span>' +
+          '<button data-act="delTimer" data-id="'+t.id+'" title="Delete">✕</button>') +
         '<span class="dur">' + fmt(t.durationMs) + '</span></div>';
     });
     h += '<button class="dashed" data-act="addTimerTo" data-id="'+s.id+'">+ Add timer</button>' +
@@ -876,7 +1067,10 @@ function renderBuild(){
       '<button class="btn ghost sm" data-act="moveSession" data-id="'+s.id+'" data-dir="1"'+(si===m.sessions.length-1?" disabled":"")+'>→</button>' +
       '</div></div>';
   });
-  h += '<button class="dashed addcol" data-act="newSession" data-id="'+m.id+'">+ Add session</button></div>';
+  h += '<div style="display:flex;flex-direction:column;gap:var(--s2)">' +
+    '<button class="dashed addcol" data-act="newSession" data-id="'+m.id+'">+ Add session</button>' +
+    '<button class="dashed addcol" style="min-height:0" data-act="addSessionFromLib">From session library</button>' +
+    '</div></div>';
   el.innerHTML = h;
   wireDnD();
 }
@@ -891,13 +1085,19 @@ function wireDnD(){
     c.addEventListener("dragend", () => { dragItem = null;
       document.querySelectorAll(".col").forEach(x => x.classList.remove("dragover")); });
   });
-  document.querySelectorAll("[data-col]").forEach(col => {
-    col.addEventListener("dragstart", (e) => {
-      if (dragItem) return;                       // a card started this drag
-      dragItem = {kind:"session", id:col.dataset.col};
+  // Only the column's own handle starts a session drag, so a drag beginning
+  // anywhere inside a timer card can never move the whole session by accident.
+  document.querySelectorAll("[data-colgrab]").forEach(g => {
+    g.addEventListener("dragstart", (e) => {
+      e.stopPropagation();
+      dragItem = {kind:"session", id:g.dataset.colgrab};
       e.dataTransfer.effectAllowed = "move";
-      try { e.dataTransfer.setData("text/plain", col.dataset.col); } catch(err){}
+      try { e.dataTransfer.setData("text/plain", g.dataset.colgrab); } catch(err){}
     });
+    g.addEventListener("dragend", () => { dragItem = null;
+      document.querySelectorAll(".col").forEach(x => x.classList.remove("dragover")); });
+  });
+  document.querySelectorAll("[data-col]").forEach(col => {
     col.addEventListener("dragover", (e) => { e.preventDefault(); col.classList.add("dragover"); });
     col.addEventListener("dragleave", () => col.classList.remove("dragover"));
     col.addEventListener("drop", (e) => {
@@ -927,6 +1127,66 @@ function wireDnD(){
    LIBRARY
    ========================================================================== */
 let librarySearch = "";
+let libTab = "timers";          // "timers" | "sessions"
+
+function moveBtns(id, act, upDisabled, downDisabled, extra){
+  return '<span class="mv" draggable="false">' +
+    '<button draggable="false" data-act="'+act+'" data-id="'+id+'" data-dir="-1" title="Move up"'+(upDisabled?' disabled':'')+'>↑</button>' +
+    '<button draggable="false" data-act="'+act+'" data-id="'+id+'" data-dir="1" title="Move down"'+(downDisabled?' disabled':'')+'>↓</button>' +
+    (extra||'') + '</span>';
+}
+
+/* ---------- Sessions library ---------- */
+function renderSessionLibrary(){
+  const m = activeMeeting();
+  let h = '<div class="row-between" style="margin-bottom:var(--s4)"><div>' +
+    '<p class="muted" style="max-width:74ch">Reusable session structures — timers, order and buffers. ' +
+    'Adding one to a meeting copies it, so editing the meeting never changes the library original ' +
+    '(or the other way round). Rename anything here and every future meeting picks up the new names.</p></div>' +
+    '<button class="btn primary" data-act="newLibSession">New session</button></div>';
+
+  if (!store.sessionLibrary.length){
+    return h + '<div class="blank"><h3>No saved sessions</h3>' +
+      '<p>Build a session on the board and press <b>Save to library</b>, or restore the EO Forum set.</p>' +
+      '<div class="acts"><button class="btn primary" data-act="restoreEOSessions">Restore EO Forum sessions</button></div></div>';
+  }
+  store.sessionLibrary.forEach((s, i) => {
+    const pool = sessionPool(s);
+    h += '<div class="sesscard"><div class="hd"><div>' +
+      '<div style="font-weight:700;font-size:18px">' + esc(s.title) + '</div>' +
+      '<div class="muted" style="font-size:13px;margin-top:3px">' + s.timers.length +
+        (s.timers.length === 1 ? ' timer · ' : ' timers · ') +
+        fmt(s.plannedMs) + ' planned · buffer ' + (pool ? fmt(pool) : 'none') + '</div></div>' +
+      '<div class="inline" style="gap:6px">' +
+        (m ? '<button class="btn primary sm" data-act="addSessionToMeeting" data-id="'+s.id+'">Add to meeting</button>' : '') +
+        '<button class="btn ghost sm" data-act="editLibSessionProps" data-id="'+s.id+'">Rename / buffers</button>' +
+        '<button class="btn ghost sm" data-act="addTimerToLibSession" data-id="'+s.id+'">+ Timer</button>' +
+        '<button class="btn ghost sm" data-act="dupLibSession" data-id="'+s.id+'">Duplicate</button>' +
+        '<button class="btn ghost sm" data-act="moveLibSession" data-id="'+s.id+'" data-dir="-1"'+(i===0?' disabled':'')+'>↑</button>' +
+        '<button class="btn ghost sm" data-act="moveLibSession" data-id="'+s.id+'" data-dir="1"'+(i===store.sessionLibrary.length-1?' disabled':'')+'>↓</button>' +
+        '<button class="btn danger sm" data-act="delLibSession" data-id="'+s.id+'">Delete</button>' +
+      '</div></div>';
+    h += '<div class="tlist">';
+    if (!s.timers.length) h += '<div class="muted" style="font-size:13.5px">No timers yet.</div>';
+    s.timers.forEach((t, ti) => {
+      h += '<div class="tcard"><span class="body">' +
+        '<span class="lab">' + esc(t.label) + '</span>' +
+        '<span class="sub">warns ' + fmtLoose(t.preWarn.n*1000) + ' before · overrun every ' +
+          t.overrun.n + 's</span></span>' +
+        moveBtns(t.id, "moveLibTimer", ti===0, ti===s.timers.length-1,
+          '<button data-act="editLibSessionTimer" data-id="'+t.id+'" title="Edit">✎</button>' +
+          '<button data-act="delLibSessionTimer" data-id="'+t.id+'" title="Delete">✕</button>') +
+        '<span class="dur">' + fmt(t.durationMs) + '</span></div>';
+    });
+    h += '</div></div>';
+  });
+  return h;
+}
+function findLibSession(id){ return store.sessionLibrary.find(s => s.id === id) || null; }
+function findLibSessionTimer(id){
+  for (const s of store.sessionLibrary){ const t = s.timers.find(x => x.id === id); if (t) return {s,t}; }
+  return null;
+}
 function timerStats(label){
   const rows = store.history.filter(r => r.timerLabel === label);
   if (!rows.length) return null;
@@ -934,8 +1194,17 @@ function timerStats(label){
 }
 function renderLibrary(){
   const el = $("libBody");
-  let h = '<div class="row-between page-h"><div><h1>Timer library</h1>' +
-    '<p>Reusable definitions. Add one to any session, or build a timer inline on the board.</p></div>' +
+  let h = '<div class="page-h"><h1>Library</h1></div>' +
+    '<div class="subtabs">' +
+      '<button data-act="libTab" data-id="timers" class="' + (libTab==="timers"?"on":"") + '">Timers</button>' +
+      '<button data-act="libTab" data-id="sessions" class="' + (libTab==="sessions"?"on":"") + '">Sessions</button>' +
+    '</div>';
+
+  if (libTab === "sessions"){ el.innerHTML = h + renderSessionLibrary(); return; }
+
+  h += '<div class="row-between" style="margin-bottom:var(--s4)"><div>' +
+    '<p class="muted" style="max-width:74ch">Reusable single timers. Add one to any session, or build a timer ' +
+    'inline on the board.</p></div>' +
     '<div class="inline"><input type="text" id="libSearch" placeholder="Search timers" value="' +
       esc(librarySearch) + '" style="width:230px">' +
     '<button class="btn primary" data-act="newLibTimer">New timer</button></div></div>';
@@ -1260,15 +1529,37 @@ function renderData(){
     '<dt>App version</dt><dd>' + APP_VERSION + '</dd>' +
     '<dt>Offline</dt><dd id="swState">checking…</dd></dl></div>';
 
+  h += '<div class="card" style="margin-bottom:var(--s3)">' +
+    '<div class="kicker" style="margin-bottom:var(--s3)">PRIVACY</div>' +
+    '<p style="max-width:74ch;margin-bottom:var(--s3)">Your meetings and history are saved only in ' +
+      'this browser, on this device. They are not uploaded anywhere, and no one else can see them — ' +
+      'not other people using this tool, and not the person who published it. The flip side is that ' +
+      'they do not travel: another browser, another computer, or a private window all start empty. ' +
+      'Use <b>Export backup</b> above to move them.</p>' +
+    '<label class="switch" style="margin-bottom:var(--s2)">' +
+      '<input type="checkbox" id="anaToggle"' + (store.settings.analytics ? ' checked' : '') + '>' +
+      '<span><b>Help improve this tool</b> — share anonymous usage</span></label>' +
+    '<p class="muted" style="font-size:13px;max-width:74ch">Off unless you switch it on. When on, it ' +
+      'records that a page was opened, how long it stayed open, and which features were used ' +
+      '(graphic chosen, room mode, meeting started or finished). It never sends your meeting names, ' +
+      'timer labels, notes or timings, sets no cookies, and does not identify you. Measurement is by ' +
+      'Plausible, which stores no personal data. Switch it off at any time and collection stops ' +
+      'immediately.</p></div>';
+
   h += '<div class="card"><div class="kicker" style="margin-bottom:var(--s3)">DANGER ZONE</div>' +
     '<p class="muted" style="margin-bottom:var(--s3);font-size:13.5px">Both are irreversible. Export a backup first.</p>' +
     '<div class="inline"><button class="btn danger" data-act="clearHistory">Clear history</button>' +
     '<button class="btn danger" data-act="factoryReset">Erase everything &amp; reseed</button></div></div>';
-  el.innerHTML = h;
+  el.innerHTML = h + creditBlock();
+  const at = $("anaToggle");
+  if (at) at.addEventListener("change", (e) => {
+    document.dispatchEvent(new CustomEvent("x-analytics", { detail: e.target.checked }));
+  });
   reportSWState();
 }
 function reportSWState(){
   const el = $("swState"); if (!el) return;
+  if (isDesktop()){ el.textContent = "built in — this is the desktop app"; return; }
   if (location.protocol === "file:"){ el.textContent = "n/a — opened as a local file"; return; }
   if (!("serviceWorker" in navigator)){ el.textContent = "not supported by this browser"; return; }
   navigator.serviceWorker.getRegistration().then(reg => {
@@ -1398,6 +1689,21 @@ function libPicker(onPick){
     const t = store.library.find(x => x.id === b.dataset.pick); closeModal(); if (t) onPick(t);
   });
 }
+function sessionPicker(onPick){
+  let h = '<h2>Add a session</h2>';
+  if (!store.sessionLibrary.length) h += '<p class="hint">The session library is empty. Save one from the board, or restore the EO Forum set in Library → Sessions.</p>';
+  store.sessionLibrary.forEach(s => {
+    h += '<div class="tcard"><span class="body"><span class="lab">' + esc(s.title) + '</span>' +
+      '<span class="sub">' + s.timers.length + ' timers · buffer ' + fmt(sessionPool(s)) + '</span></span>' +
+      '<span class="dur">' + fmt(s.plannedMs) + '</span>' +
+      '<button class="btn primary sm" data-pick="' + s.id + '">Add</button></div>';
+  });
+  h += '<div class="modal-actions"><button class="btn ghost" data-act="closeModal">Close</button></div>';
+  openModal(h);
+  $("modal").querySelectorAll("[data-pick]").forEach(b => b.onclick = () => {
+    const s = findLibSession(b.dataset.pick); closeModal(); if (s) onPick(s);
+  });
+}
 function move(arr, item, dir){
   const i = arr.indexOf(item), j = i + dir;
   if (i < 0 || j < 0 || j >= arr.length) return;
@@ -1425,7 +1731,7 @@ document.addEventListener("click", (e) => {
 
     case "newMeeting": { const m = newMeeting("New meeting"); store.meetings.push(m); save();
       loadMeetingIntoRun(m, false); meetingModal(m, () => { save(); go("build"); }); break; }
-    case "startMeeting": loadMeetingIntoRun(findMeeting(id), true); break;
+    case "startMeeting": loadMeetingIntoRun(findMeeting(id), true); track("Meeting started"); break;
     case "openBuild": loadMeetingIntoRun(findMeeting(id), false); go("build"); break;
     case "editMeetingProps": meetingModal(findMeeting(id), () => { save(); go(view); }); break;
     case "dupMeeting": { const src = findMeeting(id), c = JSON.parse(JSON.stringify(src));
@@ -1455,6 +1761,12 @@ document.addEventListener("click", (e) => {
     case "addFromLib": { const f = findSessionOf(id); libPicker(def => {
       f.s.timers.push(cloneTimer(def)); recomputeSessionPlanned(f.s); save();
       buildSteps(activeMeeting()); renderBuild(); }); break; }
+    case "saveSessionToLib": { const f = findSessionOf(id);
+      store.sessionLibrary.push(cloneSession(f.s)); save();
+      toast('"' + f.s.title + '" saved to the session library.'); break; }
+    case "addSessionFromLib": { const m = activeMeeting(); if (!m) break;
+      sessionPicker(def => { m.sessions.push(cloneSession(def)); save();
+        buildSteps(activeMeeting()); renderBuild(); }); break; }
     case "editTimer": { const f = findTimerOf(id); openTimerEditor({t:f.t, s:f.s, m:f.m}); break; }
     case "delTimer": { const f = findTimerOf(id); f.s.timers = f.s.timers.filter(x => x.id !== id);
       recomputeSessionPlanned(f.s); save(); buildSteps(activeMeeting()); renderBuild(); break; }
@@ -1463,8 +1775,10 @@ document.addEventListener("click", (e) => {
 
     case "preview": if (editRef && editRef.t) playSound($("ed_s_" + id).value); break;
     case "saveTimerEdit": readTimerEditor(); buildSteps(activeMeeting());
+      if (editRef.lib) libTab = editRef.s ? "sessions" : "timers";
       toast("Timer saved."); go(editRef.lib ? "library" : "build"); break;
-    case "backFromAlerts": go(editRef && editRef.lib ? "library" : "build"); break;
+    case "backFromAlerts": { if (editRef && editRef.lib) libTab = editRef.s ? "sessions" : "timers";
+      go(editRef && editRef.lib ? "library" : "build"); break; }
     case "saveToLib": readTimerEditor(); store.library.push(cloneTimer(editRef.t)); save();
       toast("Saved to the library."); break;
 
@@ -1476,19 +1790,57 @@ document.addEventListener("click", (e) => {
     case "delLibTimer": if (!confirm("Delete this library timer?")) break;
       store.library = store.library.filter(x => x.id !== id); save(); renderLibrary(); break;
 
+    /* ---- library sub-tabs + session library ---- */
+    case "libTab": libTab = id; renderLibrary(); break;
+    case "newLibSession": { const s = newSession("New session");
+      store.sessionLibrary.push(s); save();
+      sessionModal(s, () => { save(); renderLibrary(); }); break; }
+    case "editLibSessionProps": { const s = findLibSession(id);
+      sessionModal(s, () => { save(); renderLibrary(); }); break; }
+    case "dupLibSession": { const s = findLibSession(id); const c = cloneSession(s);
+      c.title = s.title + " (copy)";
+      store.sessionLibrary.splice(store.sessionLibrary.indexOf(s)+1, 0, c);
+      save(); renderLibrary(); break; }
+    case "delLibSession": { const s = findLibSession(id);
+      if (!confirm('Delete "' + s.title + '" from the session library? Meetings using it are unaffected.')) break;
+      store.sessionLibrary = store.sessionLibrary.filter(x => x.id !== id); save(); renderLibrary(); break; }
+    case "moveLibSession": { const s = findLibSession(id);
+      move(store.sessionLibrary, s, dir); save(); renderLibrary(); break; }
+    case "addSessionToMeeting": { const s = findLibSession(id), m = activeMeeting();
+      if (!m){ toast("No meeting loaded — pick one on Home first.", {warn:true}); break; }
+      m.sessions.push(cloneSession(s)); save(); buildSteps(activeMeeting());
+      toast('"' + s.title + '" added to ' + m.title + '.'); break; }
+    case "addTimerToLibSession": { const s = findLibSession(id); const t = newTimer("New timer", 5, 0);
+      s.timers.push(t); recomputeSessionPlanned(s); save();
+      openTimerEditor({t, s, lib:true}); break; }
+    case "editLibSessionTimer": { const f = findLibSessionTimer(id);
+      openTimerEditor({t:f.t, s:f.s, lib:true}); break; }
+    case "delLibSessionTimer": { const f = findLibSessionTimer(id);
+      f.s.timers = f.s.timers.filter(x => x.id !== id); recomputeSessionPlanned(f.s);
+      save(); renderLibrary(); break; }
+    case "moveLibTimer": { const f = findLibSessionTimer(id);
+      move(f.s.timers, f.t, dir); save(); renderLibrary(); break; }
+    case "restoreEOSessions": { buildEOSessions().forEach(s => store.sessionLibrary.push(s));
+      save(); toast("EO Forum sessions restored."); renderLibrary(); break; }
+
+    /* ---- templates ---- */
+    case "addEOTemplate": { const m = buildEOMeeting(); store.meetings.push(m);
+      if (!store.sessionLibrary.length) buildEOSessions().forEach(s => store.sessionLibrary.push(s));
+      save(); loadMeetingIntoRun(m, false);
+      toast("EO Forum Meeting added."); go("home"); break; }
+
     case "setRenderer": store.settings.rendererId = id; save(); mountRenderer();
+      track("Graphic changed", { graphic: id });
       if (view === "run") renderRun(); else renderData(); break;
     case "setTheme": store.settings.theme = id; save(); applyTheme(); renderData(); break;
-    case "setRoom": store.settings.roomMode = (id === "on"); save(); applyTheme(); renderData(); break;
+    case "setRoom": store.settings.roomMode = (id === "on"); save(); applyTheme();
+      track("Room mode", { state: id }); renderData(); break;
 
     case "exportJSON": exportJSON(); break;
     case "exportCSV": exportCSV(); break;
     case "importJSON": $("importFile").click(); break;
-    case "reseedSample": { const fresh = seed();
-      fresh.library.forEach(t => store.library.push(t));
-      fresh.meetings.forEach(m => store.meetings.push(m));
-      save(); loadMeetingIntoRun(store.meetings[store.meetings.length-1], false);
-      toast("Sample meeting added."); go(view); break; }
+    case "reseedSample": { const m = buildEOMeeting(); store.meetings.push(m);
+      save(); loadMeetingIntoRun(m, false); toast("EO Forum Meeting added."); go(view); break; }
     case "clearHistory": if (!confirm("Clear all run history and reset paused totals?")) break;
       store.history = []; store.meetings.forEach(m => m.pausedTotalMs = 0); save(); go(view); break;
     case "factoryReset":
@@ -1502,6 +1854,13 @@ document.addEventListener("click", (e) => {
 /* ==========================================================================
    WIRING
    ========================================================================== */
+document.addEventListener("x-analytics", (e) => {
+  const on = !!e.detail;
+  store.settings.analytics = on; save();
+  if (on){ loadAnalytics(); toast("Thank you — anonymous usage sharing is on."); }
+  else { toast("Usage sharing off. Reloading to clear it…"); setTimeout(() => location.reload(), 900); }
+});
+
 $("themeBtn").addEventListener("click", () => {
   store.settings.theme = document.body.dataset.theme === "dark" ? "light" : "dark";
   save(); applyTheme(); if (view === "data") renderData();
@@ -1537,7 +1896,7 @@ document.addEventListener("keydown", (e) => {
    SERVICE WORKER (optional sidecar)
    ========================================================================== */
 function registerSW(){
-  if (location.protocol === "file:" || !("serviceWorker" in navigator)) return;
+  if (isDesktop() || location.protocol === "file:" || !("serviceWorker" in navigator)) return;
   navigator.serviceWorker.register("sw.js").then(reg => {
     const offer = (w) => toast("A new version is ready.", { sticky:true, actionLabel:"Reload",
       onAction: () => { w.postMessage("skipWaiting"); location.reload(); } });
@@ -1563,6 +1922,7 @@ run.runId = uid();
 go("home");
 requestAnimationFrame(loop);
 registerSW();
+loadAnalytics();          // no-op unless the user has opted in
 </script>
 </body>
 </html>
