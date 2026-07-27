@@ -318,10 +318,15 @@ identical to the hosted one.
   Any guard in this repo must be able to demonstrate that it fails.
 - `spctl` rejecting the app is expected and does not fail the build — that only
   means "not notarised".
-- Neither build is notarised (needs a paid Apple Developer account), so the first
-  launch is right-click → Open, and `xattr -cr` clears a stubborn quarantine
-  flag. A CI step runs `codesign --verify` so signing problems surface in the log
-  rather than on a member's laptop.
+- Neither build is notarised (needs a paid Apple Developer account). On macOS
+  Sequoia and later the **right-click → Open bypass no longer exists** — the
+  first launch is refused with "Apple could not verify…", and the user clears it
+  via **System Settings → Privacy & Security → Open Anyway**, or
+  `xattr -dr com.apple.quarantine`. Do not document right-click → Open.
+- "could not verify" means *not notarised* and is expected. "is damaged" means
+  the signature is actually broken — a different problem entirely.
+- Verified on a real Mac at v3.2.5: `codesign --verify` reports "valid on disk"
+  and "satisfies its Designated Requirement".
 - Bump `version` in BOTH `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`
   when releasing, and use a tag that has not been used before.
 

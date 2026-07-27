@@ -106,15 +106,25 @@ with nothing to download.
 
 These builds are not notarised, so the first launch needs one extra step:
 
-- **macOS** — open the `.dmg`, drag Forum Timer to Applications, then
-  **right-click it in Applications and choose Open**, and Open again. Once only.
-  Double-clicking the first time will not work.
+- **macOS** — take the `aarch64` build for Apple Silicon (M1 and later) or the
+  `x64` build for an Intel Mac. Open the `.dmg`, drag Forum Timer to
+  Applications, and double-click it.
 
-  If macOS blocks it anyway or calls it damaged, clear the download flag once:
+  macOS will refuse the first launch with *"Apple could not verify… is free of
+  malware"*. That is expected: it means the app is not notarised, not that
+  anything is wrong with it. Click **Done**, then go to **System Settings →
+  Privacy & Security**, scroll to Security, and click **Open Anyway** next to
+  the Forum Timer message. Authenticate and confirm once. Every later launch is
+  normal.
+
+  One line in Terminal does the same thing:
 
   ```bash
-  xattr -cr "/Applications/Forum Timer.app"
+  xattr -dr com.apple.quarantine "/Applications/Forum Timer.app"
   ```
+
+  (Older guides say to right-click → Open. Apple removed that bypass in macOS
+  Sequoia, so it no longer works.)
 
 - **Windows** — run the `.exe`. SmartScreen will say the publisher is unknown:
   click **More info**, then **Run anyway**. Once only.
