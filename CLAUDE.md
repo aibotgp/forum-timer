@@ -295,13 +295,22 @@ identical to the hosted one.
   (pointless — the files are local), analytics never loads even if the user has
   opted in, and Data → Offline reports "built in" instead of a missing sw.js.
 - Desktop history is separate from browser history; export/import bridges them.
-- **macOS builds are ad-hoc signed** (`APPLE_SIGNING_IDENTITY: "-"`). This is not
-  cosmetic: Apple Silicon refuses to execute an unsigned binary at all, so
-  without it the app is killed on launch rather than showing the usual
-  "unidentified developer" prompt. It is not notarised — that needs a paid
-  Apple Developer account — so the first launch is still right-click → Open,
-  and `xattr -cr` clears a stubborn quarantine flag. A CI step verifies the
-  signature actually applied rather than assuming it.
+- **macOS is built once per architecture, never as a universal binary.** Apple's
+  linker ad-hoc signs each arm64/x86_64 binary automatically; `lipo` fusing the
+  two slices invalidates that signature and macOS then refuses to launch the app
+  at all — which is what happened with v3.2.2.
+- **v3.2.3 failed because `src-tauri/Cargo.toml` was committed empty**, not
+  because of signing. An empty Cargo.toml gives cargo no package to build, so
+  every job dies in tauri-action with a confusing
+  "Cannot read properties of undefined (reading 'name')". Run `./verify-files.sh`
+  before committing — it catches zero-byte files, which is how that shipped.
+- `APPLE_SIGNING_IDENTITY` is left unset. It was wrongly blamed for the v3.2.3
+  failure; whether it helps is untested. Single-architecture binaries do not
+  need it.
+- Neither build is notarised (needs a paid Apple Developer account), so the first
+  launch is right-click → Open, and `xattr -cr` clears a stubborn quarantine
+  flag. A CI step runs `codesign --verify` so signing problems surface in the log
+  rather than on a member's laptop.
 - Bump `version` in BOTH `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml`
   when releasing, and use a tag that has not been used before.
 
