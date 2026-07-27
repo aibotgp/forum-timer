@@ -311,8 +311,13 @@ identical to the hosted one.
   The linker's automatic signature covers only the executable, so without this
   `codesign --verify` reports "code has no resources but signature indicates
   they must be present" and macOS refuses to launch the app.
-- The verify step **fails the build** on an invalid signature. `spctl` rejecting
-  the app is expected and does not fail it — that only means "not notarised".
+- The verify step **fails the build** on an invalid signature, and self-tests
+  itself against a deliberately tampered copy of the bundle — because the first
+  version of this guard was written as `if codesign ... | head -20; then`, which
+  tests `head`'s exit status, not codesign's, and could therefore never fail.
+  Any guard in this repo must be able to demonstrate that it fails.
+- `spctl` rejecting the app is expected and does not fail the build — that only
+  means "not notarised".
 - Neither build is notarised (needs a paid Apple Developer account), so the first
   launch is right-click → Open, and `xattr -cr` clears a stubborn quarantine
   flag. A CI step runs `codesign --verify` so signing problems surface in the log

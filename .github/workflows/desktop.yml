@@ -189,13 +189,31 @@ jobs:
           echo "--- codesign ---"
           codesign -dv --verbose=4 "$APP" 2>&1 | head -20 || true
           echo "--- signature validity (MUST pass) ---"
-          if codesign --verify --strict --verbose=2 "$APP" 2>&1 | head -20; then
-            echo "signature verified"
+          # Never pipe codesign into head here. `if cmd | head` tests head's exit
+          # status, not codesign's, and head essentially always succeeds — so the
+          # check silently becomes a no-op that can never fail. Redirect instead.
+          if codesign --verify --strict --verbose=2 "$APP" > /tmp/codesign.log 2>&1; then
+            cat /tmp/codesign.log
+            echo "SIGNATURE VERIFIED"
           else
-            echo "SIGNATURE INVALID — this build would be refused by macOS. Failing here"
-            echo "rather than shipping an app that will not open."
+            cat /tmp/codesign.log
+            echo "SIGNATURE INVALID — macOS would refuse this build. Failing here rather"
+            echo "than shipping an app that will not open."
             exit 1
           fi
+          # Self-test: prove the check above can actually fail, by running it
+          # against a deliberately corrupted copy. If this does NOT fail, the
+          # guard is broken again and the whole step is worthless.
+          echo "--- guard self-test (an invalid signature MUST be detected) ---"
+          cp -R "$APP" /tmp/tamper.app
+          printf 'x' >> "/tmp/tamper.app/Contents/Info.plist"
+          if codesign --verify --strict /tmp/tamper.app > /dev/null 2>&1; then
+            echo "GUARD IS BROKEN: a tampered bundle passed verification"
+            exit 1
+          else
+            echo "guard works: tampered bundle correctly rejected"
+          fi
+          rm -rf /tmp/tamper.app
           echo "--- gatekeeper assessment (rejection IS expected: not notarised) ---"
           spctl -a -vv "$APP" 2>&1 | head -10 || true
 
