@@ -1,6 +1,6 @@
 [package]
 name = "forum-timer"
-version = "3.2.4"
+version = "3.2.5"
 description = "A meeting timer that makes overrun visible to the whole room"
 authors = ["Rohit Goyal"]
 edition = "2021"

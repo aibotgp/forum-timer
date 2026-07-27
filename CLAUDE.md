@@ -304,9 +304,15 @@ identical to the hosted one.
   every job dies in tauri-action with a confusing
   "Cannot read properties of undefined (reading 'name')". Run `./verify-files.sh`
   before committing — it catches zero-byte files, which is how that shipped.
-- `APPLE_SIGNING_IDENTITY` is left unset. It was wrongly blamed for the v3.2.3
-  failure; whether it helps is untested. Single-architecture binaries do not
-  need it.
+- **The .app bundle must be ad-hoc signed** — set `APPLE_SIGNING_IDENTITY=-` in
+  a macOS-only step that writes to `$GITHUB_ENV`. Never as a matrix expression
+  in `env:`, because an expression evaluating to `''` still defines the variable
+  on Windows and sends tauri-action hunting for a certificate that isn't there.
+  The linker's automatic signature covers only the executable, so without this
+  `codesign --verify` reports "code has no resources but signature indicates
+  they must be present" and macOS refuses to launch the app.
+- The verify step **fails the build** on an invalid signature. `spctl` rejecting
+  the app is expected and does not fail it — that only means "not notarised".
 - Neither build is notarised (needs a paid Apple Developer account), so the first
   launch is right-click → Open, and `xattr -cr` clears a stubborn quarantine
   flag. A CI step runs `codesign --verify` so signing problems surface in the log

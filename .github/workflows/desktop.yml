@@ -1,7 +1,7 @@
 name: Build desktop apps
 
 # Produces the Mac and Windows installers and attaches them to a GitHub Release.
-# Run it by hand from the Actions tab, or push a tag like v3.2.4.
+# Run it by hand from the Actions tab, or push a tag like v3.2.5.
 #
 # Why three jobs rather than one matrix: if each matrix job creates the release
 # itself, the two run in parallel and race to create the same tag. One wins and
@@ -9,20 +9,22 @@ name: Build desktop apps
 # end up with only one platform's installer. So the release is created once,
 # both builders upload into that known release id, and it is published at the end.
 #
-# macOS is built once per architecture, NOT as a universal binary. Apple's
-# linker ad-hoc signs each arm64/x86_64 binary automatically; `lipo` fusing them
-# into a universal binary invalidates that signature, and macOS then refuses to
-# launch the app at all. Neither build is notarised, so users still confirm once
-# via right-click -> Open. Windows is unsigned and shows SmartScreen once.
-# Removing both prompts needs a paid Apple Developer account and a Windows cert.
+# macOS is built once per architecture and the .app bundle is ad-hoc signed.
+# Both matter: `lipo` fusing a universal binary invalidates the signature, and
+# the linker's automatic signature covers only the executable, leaving the
+# bundle's resources unsigned — either way macOS refuses to launch the app. The
+# verify step fails the build if the signature is not valid, so a broken app can
+# never reach the release page again. Neither build is notarised, so users still
+# confirm once via right-click -> Open; Windows shows SmartScreen once. Removing
+# both prompts needs a paid Apple Developer account and a Windows certificate.
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release tag (e.g. v3.2.4)'
+        description: 'Release tag (e.g. v3.2.5)'
         required: true
-        default: 'v3.2.4'
+        default: 'v3.2.5'
   push:
     tags:
       - 'v*'
@@ -156,12 +158,19 @@ jobs:
       - name: Generate app icons
         run: npx --yes @tauri-apps/cli@^2 icon app-icon.png
 
-      # Do NOT set APPLE_SIGNING_IDENTITY here. tauri-action then looks for a
-      # signing certificate that does not exist and dies with
-      # "Cannot read properties of undefined (reading 'name')" — on Windows too,
-      # because the matrix expression still defines the variable as an empty
-      # string. Single-architecture macOS binaries are ad-hoc signed by Apple's
-      # linker automatically, which is all we need.
+      # Ad-hoc sign the whole .app bundle. The linker already ad-hoc signs the
+      # executable, but that covers only the Mach-O binary — the bundle's
+      # resources stay outside the signature and codesign then reports "code has
+      # no resources but signature indicates they must be present", which macOS
+      # treats as tampering and refuses to launch.
+      #
+      # Set as a macOS-only step, NOT as a matrix expression in `env:`. An
+      # expression evaluating to '' still defines the variable on Windows, which
+      # sends tauri-action hunting for a certificate that isn't there.
+      - name: Enable ad-hoc signing (macOS only)
+        if: matrix.platform == 'macos-latest'
+        run: echo "APPLE_SIGNING_IDENTITY=-" >> "$GITHUB_ENV"
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -179,9 +188,15 @@ jobs:
           if [ -z "$APP" ]; then echo "NO .app FOUND"; exit 0; fi
           echo "--- codesign ---"
           codesign -dv --verbose=4 "$APP" 2>&1 | head -20 || true
-          echo "--- signature validity ---"
-          codesign --verify --deep --strict --verbose=2 "$APP" 2>&1 | head -20 || true
-          echo "--- gatekeeper assessment (rejection here is expected: not notarised) ---"
+          echo "--- signature validity (MUST pass) ---"
+          if codesign --verify --strict --verbose=2 "$APP" 2>&1 | head -20; then
+            echo "signature verified"
+          else
+            echo "SIGNATURE INVALID — this build would be refused by macOS. Failing here"
+            echo "rather than shipping an app that will not open."
+            exit 1
+          fi
+          echo "--- gatekeeper assessment (rejection IS expected: not notarised) ---"
           spctl -a -vv "$APP" 2>&1 | head -10 || true
 
       # Diagnostics: if an installer ever fails to reach the release again,
